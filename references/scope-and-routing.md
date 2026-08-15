@@ -9,10 +9,12 @@ A request is ready when all of the following are true:
 - One learner and approximate prerequisite level can be inferred.
 - The desired understanding can be stated in one sentence.
 - One causal path, mechanism, decision, or mental model can organize the page.
-- For a novice, the independently complete core can fit in two to four concepts,
-  one to three meaningful interactions, and roughly five to ten minutes.
-- For an intermediate or expert audience, the core can fit in three to six
-  concepts, two to five interactions, and roughly ten to twenty minutes.
+- The independently complete core can fit one production profile and one causal
+  spine. An editorial page should remain a short lesson; a simulation essay may
+  use more connected scenes when they reuse one model; a playable post may use
+  more stages when they progressively expose the same rule.
+- The learner can reach a useful conclusion without completing optional formal,
+  implementation, historical, or sandbox depth.
 
 Proceed without a question when these conditions hold, even if some minor
 design choices remain. Choose sensible defaults and state them briefly.
@@ -24,6 +26,8 @@ design choices remain. Choose sensible defaults and state them briefly.
   pages.
 - The topic is a field or textbook rather than a teachable path.
 - The request could reasonably produce more than one unrelated simulator.
+- It would require several unrelated models, games, or policy laboratories
+  rather than connected scenes or stages of one mechanism.
 - Repository inspection reveals multiple features with the same label or
   separate client, server, and agent systems whose boundaries matter.
 
@@ -60,6 +64,7 @@ Before research, record:
 - Include:
 - Exclude:
 - Evidence mode: topic, supplied source, codebase, or mixed.
+- Production profile: editorial-v1, simulation-essay-v1, or playable-post-v1.
 - Core path:
 - Optional depth:
 

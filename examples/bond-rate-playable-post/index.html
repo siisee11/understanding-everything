@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="약속된 현금흐름을 그대로 둔 채 기존 고정금리 채권의 가격을 직접 다시 맞춰 보는 인터랙티브 설명">
+  <meta name="explainer-profile" content="playable-post-v1">
+  <meta name="learning-design" content="discovery-first-v1">
+  <meta name="interaction-arc" content="manual-automate-explore-transfer">
+  <title>약속은 그대로인데, 왜 가격이 움직일까?</title>
+  <link rel="icon" href="data:,">
+  <script>document.documentElement.classList.add("js");</script>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f0e6;
+      --paper-deep: #e8e1d2;
+      --ink: #17212b;
+      --muted: #5f6a70;
+      --night: #14252e;
+      --night-2: #1d333c;
+      --panel: #fffdf7;
+      --line: #cfc6b5;
+      --coupon: #f1b44c;
+      --coupon-dark: #8f5700;
+      --market: #48b9ac;
+      --market-dark: #075e58;
+      --alert: #e86b52;
+      --focus: #1769aa;
+      --success: #2b7b5b;
+      --prose: 46rem;
+      --play: 72rem;
+      --shadow: 0 16px 44px rgba(29, 38, 39, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-wrap: break-word;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.68 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button, select, input[type="range"] { touch-action: manipulation; }
+    button {
+      min-height: 46px;
+      border: 2px solid currentColor;
+      border-radius: 0.7rem;
+      padding: 0.6rem 0.95rem;
+      background: var(--panel);
+      color: var(--ink);
+      font-weight: 760;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0,0,0,.13); }
+    button:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+    button:disabled, fieldset:disabled button, fieldset:disabled input, fieldset:disabled select { opacity: .5; cursor: not-allowed; }
+    :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+    a { color: #0c655f; text-decoration-thickness: 2px; text-underline-offset: .18em; }
+    .skip-link { position: fixed; left: .75rem; top: .75rem; z-index: 20; transform: translateY(-180%); background: white; padding: .65rem 1rem; }
+    .skip-link:focus { transform: none; }
+    .prose { width: min(calc(100% - 2rem), var(--prose)); margin-inline: auto; }
+    .wide { width: min(calc(100% - 2rem), var(--play)); margin-inline: auto; }
+    .eyebrow { margin: 0 0 .65rem; color: var(--market-dark); font-size: .83rem; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+    header { padding: clamp(3.5rem, 8vw, 7rem) 0 2.8rem; }
+    h1, h2, h3 { line-height: 1.14; letter-spacing: -.035em; }
+    h1 { max-width: 11ch; margin: 0 0 1rem; font-size: clamp(2.65rem, 8vw, 5.8rem); }
+    h2 { margin: 0 0 .85rem; font-size: clamp(2rem, 5vw, 3.25rem); }
+    h3 { font-size: 1.2rem; }
+    .lede { max-width: 40rem; margin: 0; font-size: clamp(1.15rem, 2.4vw, 1.38rem); }
+    .header-actions { margin-top: 1.4rem; }
+    .header-actions button { background: transparent; }
+    .opening-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(15rem, .75fr);
+      gap: 1.2rem;
+      margin-top: 2.25rem;
+      padding: clamp(1rem, 3vw, 1.6rem);
+      border: 2px solid var(--ink);
+      border-radius: 1.1rem;
+      background: var(--panel);
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+    .opening-card p { margin: .35rem 0; }
+    .cash-mini { display: flex; align-items: flex-end; gap: .4rem; }
+    .cash-mini span { flex: 1; min-width: 0; padding: .55rem .2rem; border: 2px solid var(--coupon-dark); border-radius: .45rem; background: #fff2cf; color: #5f3900; text-align: center; font-weight: 800; }
+    .cash-mini span:last-child { padding-top: 1.7rem; }
+    .stage { padding: clamp(4.2rem, 8vw, 7.2rem) 0; border-top: 1px solid var(--line); }
+    .stage-intro { margin-bottom: 1.35rem; }
+    .stage-number { display: inline-grid; width: 2.15rem; height: 2.15rem; margin-bottom: .65rem; place-items: center; border: 2px solid currentColor; border-radius: 50%; font-weight: 900; }
+    .goal { margin: .6rem 0; font-weight: 800; font-size: 1.08rem; }
+    .instruction { color: var(--muted); }
+    .play-surface {
+      border: 2px solid #0d2028;
+      border-radius: 1.25rem;
+      padding: clamp(.85rem, 2vw, 1.35rem);
+      background: var(--night);
+      color: #f7f4ea;
+      box-shadow: var(--shadow);
+    }
+    .surface-topline { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .7rem; margin-bottom: 1rem; color: #d0dedc; font-size: .9rem; }
+    .status-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .65rem; border: 1px solid #739096; border-radius: 99px; }
+    .status-chip::before { content: ""; width: .65rem; height: .65rem; border-radius: 50%; background: var(--coupon); }
+    .promise-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: .55rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+    .promise {
+      min-width: 0;
+      border: 2px solid #c69032;
+      border-radius: .7rem;
+      padding: .65rem .4rem;
+      background: #fff3ce;
+      color: #5d3b00;
+      text-align: center;
+    }
+    .promise small { display: block; color: #7d5a1e; }
+    .promise strong { display: block; font-size: 1.08rem; }
+    .comparison-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: .8rem; }
+    .versus { align-self: center; color: #aac1c2; font-size: .8rem; font-weight: 900; letter-spacing: .08em; }
+    .offer-card { position: relative; min-width: 0; border: 2px solid #617d82; border-radius: .9rem; padding: 1rem; background: var(--night-2); }
+    .offer-card.market { border-color: var(--market); }
+    .offer-card h3 { margin: 0 0 .7rem; }
+    .offer-card dl { display: grid; grid-template-columns: 1fr auto; gap: .35rem .7rem; margin: 0; }
+    .offer-card dt { color: #b9cdcf; }
+    .offer-card dd { margin: 0; font-weight: 850; text-align: right; }
+    .big-number { margin: .4rem 0 .85rem; font-variant-numeric: tabular-nums; font-size: clamp(2rem, 6vw, 3.35rem); font-weight: 900; letter-spacing: -.04em; }
+    .big-number.coupon { color: var(--coupon); }
+    .big-number.market { color: #73dacd; }
+    .yield-track { position: relative; height: 2.5rem; margin-top: 1rem; border-radius: .45rem; background: #0c1d24; overflow: hidden; }
+    .yield-track::after { content: "시장 5%"; position: absolute; left: 62.5%; top: 0; bottom: 0; border-left: 2px dashed var(--market); padding: .45rem .3rem; color: #a9f3ea; font-size: .78rem; }
+    .yield-marker { position: absolute; top: .35rem; left: 37.5%; width: 1.7rem; height: 1.7rem; transform: translateX(-50%); border: 3px solid white; border-radius: 50%; background: var(--coupon); transition: left .16s ease; }
+    .manual-controls { display: grid; grid-template-columns: auto minmax(12rem, 1fr) auto; gap: .65rem; align-items: end; margin-top: 1rem; }
+    .range-wrap { display: grid; gap: .35rem; }
+    input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--coupon); }
+    .step-button { width: 48px; padding: 0; background: transparent; color: white; }
+    .action-row { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .9rem; }
+    .primary { border-color: var(--coupon); background: var(--coupon); color: #2e2105; }
+    .secondary { border-color: #9ab0b3; background: transparent; color: white; }
+    .feedback, .history-panel, .model-note {
+      margin-top: 1rem;
+      border-radius: .8rem;
+      padding: .85rem 1rem;
+      background: var(--panel);
+      color: var(--ink);
+    }
+    .feedback strong { display: block; margin-bottom: .2rem; }
+    .feedback[data-tone="success"] { border-left: 6px solid var(--success); }
+    .feedback[data-tone="try"] { border-left: 6px solid var(--alert); }
+    .tiny { color: var(--muted); font-size: .88rem; }
+    .locked-note { margin: 0 0 .75rem; padding: .6rem .75rem; border: 1px dashed #819a9d; border-radius: .55rem; color: #d5e3e3; }
+    .js .unlocked .locked-note { display: none; }
+    fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    legend { margin-bottom: .55rem; font-weight: 850; }
+    .control-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #526a70; }
+    .button-group { display: flex; flex-wrap: wrap; gap: .55rem; }
+    .button-group button { background: transparent; color: white; }
+    .button-group button[aria-pressed="true"] { border-color: var(--market); background: var(--market); color: #082a29; }
+    .transport { display: grid; grid-template-columns: repeat(4, auto) minmax(10rem, 1fr); gap: .55rem; align-items: end; margin-top: 1rem; }
+    .transport button { background: transparent; color: white; }
+    .transport label { display: grid; gap: .3rem; color: #d5e3e3; }
+    select { min-height: 46px; border: 2px solid #9ab0b3; border-radius: .65rem; padding: .45rem; background: #fff; color: var(--ink); }
+    .auto-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(15rem, .55fr); gap: 1rem; margin-top: 1rem; }
+    .chart-card { min-width: 0; border: 1px solid #536f74; border-radius: .8rem; padding: .65rem; background: #0d2028; }
+    .chart-card svg { display: block; width: 100%; height: auto; }
+    .chart-grid { stroke: #36515a; stroke-width: 1; }
+    .chart-par { stroke: #a6b7ba; stroke-width: 1.5; stroke-dasharray: 5 5; }
+    .chart-target { stroke: var(--market); stroke-width: 2; stroke-dasharray: 6 4; }
+    .chart-line { fill: none; stroke: var(--coupon); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-dot { fill: var(--coupon); stroke: white; stroke-width: 2; }
+    .metric-stack { display: grid; gap: .7rem; }
+    .metric { border: 1px solid #536f74; border-radius: .7rem; padding: .7rem; background: var(--night-2); }
+    .metric span { display: block; color: #bcd0d1; font-size: .82rem; }
+    .metric strong { display: block; color: white; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+    .round-list, .scenario-history { margin: .55rem 0 0; padding: 0; list-style: none; }
+    .round-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .round-list li { padding: .25rem .45rem; border: 1px solid var(--line); border-radius: .35rem; font-size: .8rem; font-variant-numeric: tabular-nums; }
+    .scenario-history { display: grid; gap: .5rem; }
+    .scenario-history li { display: grid; grid-template-columns: 1fr auto; gap: .3rem .7rem; border-bottom: 1px solid var(--line); padding: .45rem 0; }
+    .scenario-history li:last-child { border-bottom: 0; }
+    .scenario-history small { grid-column: 1 / -1; color: var(--muted); }
+    .prediction-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; }
+    .prediction-grid button { min-height: 8rem; background: var(--night-2); color: white; }
+    .prediction-grid button strong { display: block; color: var(--coupon); font-size: 1.2rem; }
+    .prediction-grid button[aria-pressed="true"] { border-color: var(--coupon); box-shadow: inset 0 0 0 2px var(--coupon); }
+    .sandbox-layout { display: grid; grid-template-columns: minmax(16rem, .65fr) minmax(0, 1.35fr); gap: 1rem; }
+    .sandbox-controls { display: grid; gap: .8rem; align-content: start; }
+    .sandbox-controls label { display: grid; gap: .2rem; }
+    .label-line { display: flex; justify-content: space-between; gap: 1rem; }
+    output { font-variant-numeric: tabular-nums; font-weight: 900; }
+    .sandbox-result { border: 1px solid #536f74; border-radius: .9rem; padding: 1rem; background: #0d2028; }
+    .price-relation { display: grid; grid-template-columns: 1fr auto 1fr; gap: .5rem; align-items: end; margin-top: 1rem; }
+    .price-column { text-align: center; }
+    .price-column span { display: block; color: #bcd0d1; font-size: .82rem; }
+    .price-column strong { display: block; font-size: clamp(1.6rem, 5vw, 2.4rem); }
+    .relation-arrow { padding-bottom: .35rem; color: var(--coupon); font-weight: 900; }
+    .sandbox-promises { display: flex; gap: .35rem; align-items: end; min-height: 6rem; margin: 1rem 0 0; overflow: hidden; }
+    .sandbox-promises span { flex: 1 1 0; min-width: 4px; border-radius: .25rem .25rem 0 0; background: var(--coupon); }
+    .sandbox-promises span:last-child { background: var(--market); }
+    .model-note { border-left: 5px solid var(--coupon); }
+    .model-note ul { margin-bottom: .25rem; padding-left: 1.25rem; }
+    .debrief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .debrief-card { border: 2px solid var(--ink); border-radius: .9rem; padding: 1rem; background: var(--panel); }
+    .debrief-card h3 { margin-top: 0; }
+    .formula { overflow-x: auto; padding: .8rem; border: 1px solid var(--line); background: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+    .sources { padding: 3.5rem 0 6rem; color: var(--muted); }
+    .sources li + li { margin-top: .75rem; }
+    .noscript { margin: 1rem auto 4rem; border: 3px solid var(--alert); padding: 1rem; background: white; }
+    .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+
+    @media (max-width: 760px) {
+      html { scroll-behavior: auto; }
+      body { font-size: 16px; }
+      .prose, .wide { width: min(calc(100% - 1.15rem), var(--prose)); }
+      header { padding-top: 3.5rem; }
+      .opening-card, .comparison-grid, .auto-layout, .sandbox-layout, .debrief-grid { grid-template-columns: 1fr; }
+      .versus { text-align: center; }
+      .promise-strip { gap: .28rem; }
+      .promise { padding: .5rem .16rem; font-size: .78rem; }
+      .manual-controls { grid-template-columns: 46px minmax(0, 1fr) 46px; }
+      .transport { grid-template-columns: repeat(2, 1fr); }
+      .transport label { grid-column: 1 / -1; }
+      .prediction-grid { grid-template-columns: 1fr; }
+      .prediction-grid button { min-height: 4.7rem; }
+      .price-relation { grid-template-columns: 1fr; align-items: center; }
+      .relation-arrow { transform: rotate(90deg); padding: 0; text-align: center; }
+      .surface-topline { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body class="playable-post">
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+  <header class="prose">
+    <p class="eyebrow">오늘의 가격표를 다시 붙여라</p>
+    <h1>약속은 그대로인데, 왜 가격이 움직일까?</h1>
+    <p class="lede">어제 산 채권은 앞으로 해마다 3달러를 주기로 약속했습니다. 그런데 오늘, 똑같이 믿을 만한 새 채권이 5달러를 줍니다. 오래된 채권을 누가 고를까요?</p>
+    <div class="header-actions"><button type="button" data-action="reset" data-scope="all">전체 처음으로</button></div>
+    <div class="opening-card" aria-label="기존 채권과 새 기회의 비교">
+      <div>
+        <strong>기존 약속 · 앞으로 5년</strong>
+        <p>액면 100달러, 매년 3달러. 마지막 해에는 원금 100달러도 돌려받습니다.</p>
+        <div class="cash-mini" aria-label="기존 채권의 현금흐름: 1년부터 4년까지 3달러, 5년에 103달러">
+          <span>1년<br>$3</span><span>2년<br>$3</span><span>3년<br>$3</span><span>4년<br>$3</span><span>5년<br>$103</span>
+        </div>
+      </div>
+      <div>
+        <strong>오늘 생긴 새 기회</strong>
+        <p><b>100달러</b>를 내면 같은 5년 동안 해마다 <b>5달러</b>를 받습니다.</p>
+        <p class="tiny">기존 약속을 바꿀 수 없다면, 움직일 수 있는 것은 무엇일까요?</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" data-model="annual-fixed-coupon-bond" data-seed="deterministic-no-randomness">
+    <section class="stage" data-stage="manual" data-stage-kind="manual" aria-labelledby="manual-title">
+      <div class="prose stage-intro">
+        <span class="stage-number" aria-hidden="true">1</span>
+        <h2 id="manual-title">당신이 가격표를 붙여 보세요</h2>
+        <p class="goal">목표: 기존 3% 채권도 새 5% 기회와 경쟁하도록, 오늘의 가격만 조정하세요.</p>
+        <p class="instruction">가격 손잡이를 움직여 두 수익률을 가까이 맞춘 뒤 제출하세요. 위의 다섯 약속 봉투는 끝까지 그대로입니다.</p>
+      </div>
+      <div class="wide play-surface" data-model="annual-fixed-coupon-bond">
+        <div class="surface-topline"><span class="status-chip">고정된 약속 5개</span><span>조정 가능: 오늘의 거래 가격 1개</span></div>
+        <ol class="promise-strip" aria-label="변하지 않는 현금흐름">
+          <li class="promise"><small>1년 뒤</small><strong>$3</strong></li>
+          <li class="promise"><small>2년 뒤</small><strong>$3</strong></li>
+          <li class="promise"><small>3년 뒤</small><strong>$3</strong></li>
+          <li class="promise"><small>4년 뒤</small><strong>$3</strong></li>
+          <li class="promise"><small>5년 뒤</small><strong>$103</strong></li>
+        </ol>
+        <div class="comparison-grid">
+          <article class="offer-card">
+            <h3>기존 3% 채권</h3>
+            <p class="big-number coupon" id="manual-price">$100.00</p>
+            <dl><dt>약속된 연 쿠폰</dt><dd>$3</dd><dt>이 가격에서의 만기수익률</dt><dd id="manual-yield">3.00%</dd></dl>
+            <div class="yield-track" aria-hidden="true"><span class="yield-marker" id="manual-marker"></span></div>
+          </article>
+          <div class="versus" aria-hidden="true">VS</div>
+          <article class="offer-card market">
+            <h3>새 5% 기회</h3>
+            <p class="big-number market">$100.00</p>
+            <dl><dt>약속된 연 쿠폰</dt><dd>$5</dd><dt>시장 기준 수익률</dt><dd>5.00%</dd></dl>
+            <p class="tiny">이 모델에서는 신용위험과 만기가 같습니다.</p>
+          </article>
+        </div>
+        <div class="manual-controls">
+          <button class="step-button" type="button" id="manual-minus" aria-label="기존 채권 가격 1달러 낮추기">−</button>
+          <label class="range-wrap" for="manual-price-input"><span>기존 채권의 오늘 가격 <output id="manual-price-output" for="manual-price-input">$100.00</output></span><input id="manual-price-input" type="range" min="80" max="110" step="0.1" value="100"></label>
+          <button class="step-button" type="button" id="manual-plus" aria-label="기존 채권 가격 1달러 높이기">+</button>
+        </div>
+        <div class="action-row"><button class="primary" type="button" id="manual-submit">이 가격으로 시장에 내놓기</button><button class="secondary" type="button" data-action="reset" data-scope="manual">가격만 $100으로</button></div>
+        <p class="tiny" id="manual-state-text">현재는 기존 채권의 수익률 3.00%가 새 기회의 5.00%보다 낮아, 새 기회가 더 매력적입니다.</p>
+        <div class="feedback" id="manual-feedback" aria-live="polite">가격을 낮추면 똑같은 $3·$3·$3·$3·$103을 더 적은 돈으로 살 수 있어 수익률이 올라갑니다.</div>
+      </div>
+    </section>
+
+    <section class="stage" data-stage="automated" data-stage-kind="automated" aria-labelledby="auto-title">
+      <div class="prose stage-intro">
+        <span class="stage-number" aria-hidden="true">2</span>
+        <h2 id="auto-title">이번에는 시장이 반복합니다</h2>
+        <p class="goal">당신이 한 일을 여러 매수 제안이 자동으로 반복해, 가격과 시장수익률의 차이를 줄입니다.</p>
+        <p class="instruction">먼저 시장금리만 위·아래·그대로 중 하나로 바꾸고 재생하세요. 한 번 끝내면 금리를 5%로 고정한 채 만기만 비교할 수 있습니다.</p>
+      </div>
+      <div class="wide play-surface" id="auto-surface">
+        <p class="locked-note" id="auto-lock-note">1단계에서 경쟁 가능한 가격을 먼저 찾아야 자동 시장이 열립니다.</p>
+        <fieldset id="auto-controls">
+          <legend>시장금리 하나만 바꾸기</legend>
+          <div class="button-group" aria-label="시장금리 프리셋">
+            <button type="button" data-auto-rate="1" aria-pressed="false">금리 하락 · 1%</button>
+            <button type="button" data-auto-rate="3" aria-pressed="false">금리 그대로 · 3%</button>
+            <button type="button" data-auto-rate="5" aria-pressed="true">금리 상승 · 5%</button>
+          </div>
+          <div class="transport">
+            <button type="button" data-action="play" id="auto-play">재생</button>
+            <button type="button" data-action="pause" id="auto-pause">일시정지</button>
+            <button type="button" data-action="replay" id="auto-replay">다시 재생</button>
+            <button type="button" data-action="reset" data-scope="automated">이 장면 초기화</button>
+            <label for="speed-control">재생 속도<select id="speed-control"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+          </div>
+          <div class="auto-layout">
+            <div class="chart-card">
+              <svg id="auto-chart" viewBox="0 0 640 260" role="img" aria-labelledby="auto-chart-title auto-chart-desc">
+                <title id="auto-chart-title">자동 가격 조정 기록</title>
+                <desc id="auto-chart-desc">가격 100달러에서 시작해 5% 시장금리에 맞는 91.34달러로 내려가는 과정</desc>
+                <line class="chart-grid" x1="58" y1="42" x2="610" y2="42"></line><line class="chart-grid" x1="58" y1="126" x2="610" y2="126"></line><line class="chart-grid" x1="58" y1="210" x2="610" y2="210"></line>
+                <line class="chart-par" x1="58" y1="126" x2="610" y2="126"></line>
+                <line class="chart-target" id="auto-target-line" x1="58" y1="198" x2="610" y2="198"></line>
+                <text x="8" y="48" fill="#bcd0d1" font-size="15">$110</text><text x="8" y="132" fill="#bcd0d1" font-size="15">$100</text><text x="8" y="216" fill="#bcd0d1" font-size="15">$90</text>
+                <text id="auto-target-label" x="430" y="192" fill="#9af1e8" font-size="15">경쟁선 $91.34</text>
+                <polyline class="chart-line" id="auto-chart-line" points="58,126"></polyline><g id="auto-chart-dots"></g>
+              </svg>
+            </div>
+            <div class="metric-stack">
+              <div class="metric"><span>현재 제안 가격</span><strong id="auto-current-price">$100.00</strong></div>
+              <div class="metric"><span>경쟁 가능한 가격</span><strong id="auto-target-price">$91.34</strong></div>
+              <div class="metric"><span>액면 $100 대비</span><strong id="auto-change">0.00%</strong></div>
+              <div class="metric"><span>현재 상태</span><strong id="auto-status">대기</strong></div>
+            </div>
+          </div>
+          <div class="feedback" id="auto-feedback" aria-live="polite">시장은 $100에서 출발합니다. 새 5% 기회와 맞서려면 기존 3% 채권의 가격이 내려가야 합니다.</div>
+          <div class="history-panel" data-history data-metric="액면가 대비 가격 변화">
+            <strong>이번 경매의 라운드 기록</strong><ol class="round-list" id="auto-rounds"><li>0회 · $100.00</li></ol>
+            <strong>완료한 시나리오</strong><ol class="scenario-history" id="scenario-history"><li>아직 완료한 시나리오가 없습니다.</li></ol>
+          </div>
+          <fieldset class="control-block" id="maturity-controls">
+            <legend>시장금리 5%로 고정하고, 남은 만기만 바꾸기</legend>
+            <p class="tiny">첫 자동 경매를 끝내면 열립니다. 같은 금리 변화가 2년·5년·10년 채권에 남기는 가격 차이를 비교하세요.</p>
+            <div class="button-group"><button type="button" data-auto-years="2" aria-pressed="false">2년</button><button type="button" data-auto-years="5" aria-pressed="true">5년</button><button type="button" data-auto-years="10" aria-pressed="false">10년</button></div>
+          </fieldset>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="stage" data-stage="transfer" data-stage-kind="transfer" aria-labelledby="transfer-title">
+      <div class="prose stage-intro">
+        <span class="stage-number" aria-hidden="true">3</span>
+        <h2 id="transfer-title">방향을 뒤집어 볼까요?</h2>
+        <p class="goal">쿠폰 6%, 시장금리 2%, 남은 만기 8년. 이 채권의 가격은 액면 $100보다 위, 아래, 같은 곳 중 어디일까요?</p>
+        <p class="instruction">정확한 숫자를 계산하지 말고, 어느 쪽이 더 매력적인 약속인지 먼저 고르세요.</p>
+      </div>
+      <div class="wide play-surface">
+        <div class="prediction-grid" role="group" aria-label="가격 방향 예상">
+          <button type="button" data-prediction="above" aria-pressed="false"><strong>$100보다 위</strong>더 비싼 가격표</button>
+          <button type="button" data-prediction="same" aria-pressed="false"><strong>정확히 $100</strong>액면 그대로</button>
+          <button type="button" data-prediction="below" aria-pressed="false"><strong>$100보다 아래</strong>할인된 가격표</button>
+        </div>
+        <div class="feedback" id="transfer-feedback" aria-live="polite">기존 약속의 6%가 새 시장의 2%보다 높습니다. 이 차이를 오늘 가격이 어떻게 흡수할지 예상해 보세요.</div>
+      </div>
+    </section>
+
+    <section class="stage" data-stage="sandbox" data-stage-kind="sandbox" aria-labelledby="sandbox-title">
+      <div class="prose stage-intro">
+        <span class="stage-number" aria-hidden="true">4</span>
+        <h2 id="sandbox-title">이제 약속과 시장을 마음대로 바꿔 보세요</h2>
+        <p class="goal">쿠폰, 시장금리, 남은 만기를 자유롭게 바꾸되, 현금흐름과 오늘 가격을 서로 다른 것으로 보세요.</p>
+        <p class="instruction">쿠폰을 움직이면 미래의 봉투 크기가 바뀝니다. 시장금리를 움직이면 봉투는 그대로이고 오늘 가격만 다시 계산됩니다.</p>
+      </div>
+      <div class="wide play-surface" id="sandbox-surface">
+        <p class="locked-note" id="sandbox-lock-note">3단계에서 방향을 한 번 예상하면 실험실이 열립니다. 정답을 맞혀야만 열리는 것은 아닙니다.</p>
+        <fieldset id="sandbox-controls" data-control="sandbox">
+          <div class="sandbox-layout">
+            <div class="sandbox-controls">
+              <label for="sandbox-coupon"><span class="label-line"><span>약속된 연 쿠폰율</span><output id="sandbox-coupon-output" for="sandbox-coupon">6.0%</output></span><input id="sandbox-coupon" type="range" min="0" max="8" step="0.5" value="6"></label>
+              <label for="sandbox-rate"><span class="label-line"><span>오늘의 시장금리</span><output id="sandbox-rate-output" for="sandbox-rate">2.0%</output></span><input id="sandbox-rate" type="range" min="0" max="8" step="0.5" value="2"></label>
+              <label for="sandbox-years"><span class="label-line"><span>남은 만기</span><output id="sandbox-years-output" for="sandbox-years">8년</output></span><input id="sandbox-years" type="range" min="1" max="15" step="1" value="8"></label>
+              <div class="button-group" aria-label="샌드박스 프리셋"><button type="button" data-sandbox-preset="up">금리 5%로</button><button type="button" data-sandbox-preset="same">쿠폰=금리</button><button type="button" data-sandbox-preset="down">금리 1%로</button></div>
+              <button class="secondary" type="button" data-action="reset" data-scope="sandbox">실험값 초기화</button>
+            </div>
+            <div class="sandbox-result">
+              <div class="price-relation"><div class="price-column"><span>액면가</span><strong>$100.00</strong></div><div class="relation-arrow" id="sandbox-arrow" aria-hidden="true">→</div><div class="price-column"><span>모델 가격</span><strong class="big-number coupon" id="sandbox-price">$129.30</strong></div></div>
+              <p id="sandbox-explanation">쿠폰 6.0%가 시장금리 2.0%보다 높아, 같은 수익률이 되려면 가격은 액면보다 올라갑니다.</p>
+              <div class="sandbox-promises" id="sandbox-promises" role="img" aria-label="8년의 현금흐름. 매년 6달러, 마지막 해 106달러"></div>
+              <p class="tiny" id="sandbox-cashflow-text">현금흐름: 1~7년 각각 $6, 8년 $106. 시장금리를 바꿔도 이 줄은 변하지 않습니다.</p>
+            </div>
+          </div>
+          <div class="feedback" id="sandbox-feedback" aria-live="polite">현재 값에서는 액면보다 $29.30 높은 가격이 시장금리 2.0%와 균형을 이룹니다.</div>
+        </fieldset>
+      </div>
+      <div class="prose model-note model-limit" data-model-limit>
+        <strong>이 모델의 규칙과 경계</strong>
+        <ul>
+          <li>액면가는 $100이고 쿠폰은 1년에 한 번 지급됩니다.</li>
+          <li>모든 지급은 확실하다고 두며 부도·신용위험을 넣지 않습니다.</li>
+          <li>하나의 평탄한 시장금리로 모든 미래 현금흐름을 할인합니다.</li>
+          <li>세금, 수수료, 유동성, 매수·매도 호가 차이, 중도상환, 인플레이션은 제외합니다.</li>
+          <li>화면의 가격은 이 가정 아래 현금흐름의 현재가치를 계산한 값이지, 실제 시장 호가나 투자 판단이 아닙니다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="stage" aria-labelledby="debrief-title">
+      <div class="prose">
+        <h2 id="debrief-title">움직인 것과 움직이지 않은 것</h2>
+        <div class="debrief-grid">
+          <article class="debrief-card"><h3>그대로인 것</h3><p>고정금리 채권이 약속한 쿠폰과 만기 원금. 시장금리가 바뀌어도 계약서의 $3·$3·$3·$3·$103은 다시 쓰이지 않습니다.</p></article>
+          <article class="debrief-card"><h3>다시 정해진 것</h3><p>그 약속을 오늘 사고파는 가격. 새 기회와 같은 수익률이 되도록 가격이 움직이므로, 다른 조건이 같다면 시장금리와 기존 고정금리 채권 가격은 반대로 움직입니다.</p></article>
+        </div>
+        <details>
+          <summary>방금 시장이 사용한 계산 보기</summary>
+          <p>각 미래 현금흐름을 시장금리로 할인해 더했습니다. 연 쿠폰을 C, 액면을 F, 시장금리를 r, 남은 연수를 n이라 하면:</p>
+          <p class="formula">가격 = Σ(t=1…n) C / (1+r)^t + F / (1+r)^n</p>
+          <p>3% 쿠폰, 5% 시장금리, 5년의 경우 $91.341…입니다. 이 가격에서 사야 고정된 현금흐름의 만기수익률이 5%에 맞습니다.</p>
+        </details>
+        <p class="tiny">이 페이지는 개념을 탐색하기 위한 계산 모델이며 특정 증권의 매수·매도를 권하지 않습니다.</p>
+      </div>
+    </section>
+
+    <section class="prose sources" id="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">근거</h2>
+      <ol>
+        <li><a href="https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-86">SEC Investor.gov — Fixed Income Investments: When Interest Rates Go Up, Prices of Fixed-Rate Bonds Fall</a> (2013-06-26). 고정 쿠폰은 유지되며 시장금리와 고정금리 채권 가격은 반대로 움직인다는 설명과 만기 민감도 사례.</li>
+        <li><a href="https://www.treasurydirect.gov/marketable-securities/understanding-pricing/">U.S. TreasuryDirect — Understanding Pricing and Interest Rates</a>. 시장수익률이 표면금리보다 높으면 가격은 액면 아래, 같으면 액면, 낮으면 액면 위라는 관계.</li>
+        <li><a href="https://www.finra.org/investors/insights/bond-yield-return">FINRA — Understanding Bond Yield and Return</a>. 만기수익률을 미래 쿠폰과 원금의 현재가치 합이 시장가격과 같아지는 할인율로 정의.</li>
+        <li><a href="https://www.finra.org/investors/insights/bonds-interest-rate-changes-duration">FINRA — Brush Up on Bonds: Interest Rate Changes and Duration</a> (2024-09-19). 금리 변화와 가격의 반대 방향, 긴 만기의 더 큰 민감도에 대한 설명.</li>
+      </ol>
+    </section>
+  </main>
+
+  <noscript><div class="prose noscript"><strong>자바스크립트 없이 읽는 핵심</strong><p>액면 $100, 연 3% 쿠폰, 5년 남은 고정금리 채권의 현금흐름은 $3·$3·$3·$3·$103으로 고정됩니다. 시장금리가 5%로 오르면 그 약속은 바뀌지 않지만, 같은 수익률을 내려면 오늘 가격은 약 $91.34로 내려갑니다. 반대로 시장금리가 1%로 내리면 가격은 약 $109.71로 올라갑니다. 계산은 연 1회 쿠폰, 확실한 지급, 하나의 평탄한 시장금리, 수수료·세금·유동성 없음이라는 가정에 따릅니다. 실제 시장 호가나 투자 조언이 아닙니다.</p></div></noscript>
+
+  <script>
+    "use strict";
+
+    var BondModel = Object.freeze({
+      price: function (spec) {
+        var face = spec.face;
+        var coupon = face * spec.couponRate / 100;
+        var rate = spec.marketRate / 100;
+        var years = spec.years;
+        if (rate === 0) return coupon * years + face;
+        return coupon * (1 - Math.pow(1 + rate, -years)) / rate + face / Math.pow(1 + rate, years);
+      },
+      cashflows: function (spec) {
+        var coupon = spec.face * spec.couponRate / 100;
+        return Array.from({ length: spec.years }, function (_, index) {
+          return coupon + (index === spec.years - 1 ? spec.face : 0);
+        });
+      },
+      yieldForPrice: function (spec, price) {
+        var low = -0.95;
+        var high = 1;
+        for (var i = 0; i < 120; i += 1) {
+          var middle = (low + high) / 2;
+          var value = BondModel.price({ face: spec.face, couponRate: spec.couponRate, marketRate: middle * 100, years: spec.years });
+          if (value > price) low = middle; else high = middle;
+        }
+        return (low + high) * 50;
+      },
+      relation: function (couponRate, marketRate) {
+        if (Math.abs(couponRate - marketRate) < 0.00001) return "same";
+        return couponRate > marketRate ? "above" : "below";
+      }
+    });
+
+    var Scenarios = Object.freeze({
+      manual: Object.freeze({ face: 100, couponRate: 3, marketRate: 5, years: 5 }),
+      transfer: Object.freeze({ face: 100, couponRate: 6, marketRate: 2, years: 8 }),
+      autoRate: Object.freeze({ down: 1, same: 3, up: 5 }),
+      resetSandbox: Object.freeze({ face: 100, couponRate: 6, marketRate: 2, years: 8 })
+    });
+
+    function freshState() {
+      return {
+        manual: { price: 100, complete: false, attempts: 0 },
+        auto: { marketRate: 5, years: 5, currentPrice: 100, tick: 0, trace: [100], running: false, finished: false, speed: 1, recorded: false },
+        transfer: { choice: null },
+        sandbox: { face: 100, couponRate: 6, marketRate: 2, years: 8 },
+        unlocked: { auto: false, maturity: false, sandbox: false }
+      };
+    }
+
+    var state = freshState();
+
+    var HistoryRecorder = {
+      entries: [],
+      reset: function () { this.entries = []; },
+      record: function (entry) {
+        this.entries.push(Object.assign({}, entry));
+        if (this.entries.length > 8) this.entries.shift();
+      }
+    };
+
+    var dom = {};
+    ["manual-price", "manual-yield", "manual-marker", "manual-price-input", "manual-price-output", "manual-state-text", "manual-feedback", "manual-minus", "manual-plus", "manual-submit", "auto-surface", "auto-controls", "maturity-controls", "auto-current-price", "auto-target-price", "auto-change", "auto-status", "auto-feedback", "auto-rounds", "scenario-history", "auto-chart-line", "auto-chart-dots", "auto-target-line", "auto-target-label", "auto-chart-desc", "speed-control", "transfer-feedback", "sandbox-surface", "sandbox-controls", "sandbox-coupon", "sandbox-rate", "sandbox-years", "sandbox-coupon-output", "sandbox-rate-output", "sandbox-years-output", "sandbox-price", "sandbox-arrow", "sandbox-explanation", "sandbox-promises", "sandbox-cashflow-text", "sandbox-feedback"].forEach(function (id) { dom[id] = document.getElementById(id); });
+
+    var formatMoney = function (value) { return "$" + value.toFixed(2); };
+    var formatPercent = function (value, digits) { return value.toFixed(digits == null ? 2 : digits) + "%"; };
+
+    var StageController = {
+      sync: function () {
+        dom["auto-controls"].disabled = !state.unlocked.auto;
+        dom["maturity-controls"].disabled = !state.unlocked.maturity;
+        dom["sandbox-controls"].disabled = !state.unlocked.sandbox;
+        dom["auto-surface"].classList.toggle("unlocked", state.unlocked.auto);
+        dom["sandbox-surface"].classList.toggle("unlocked", state.unlocked.sandbox);
+      },
+      unlockAuto: function () { state.unlocked.auto = true; this.sync(); },
+      unlockMaturity: function () { state.unlocked.maturity = true; this.sync(); },
+      unlockSandbox: function () { state.unlocked.sandbox = true; this.sync(); }
+    };
+
+    var Renderer = {
+      manual: function () {
+        var spec = Scenarios.manual;
+        var ytm = BondModel.yieldForPrice(spec, state.manual.price);
+        var gap = ytm - spec.marketRate;
+        dom["manual-price"].textContent = formatMoney(state.manual.price);
+        dom["manual-price-output"].textContent = formatMoney(state.manual.price);
+        dom["manual-yield"].textContent = formatPercent(ytm);
+        dom["manual-marker"].style.left = Math.max(3, Math.min(97, ytm / 8 * 100)) + "%";
+        if (Math.abs(gap) < .12) dom["manual-state-text"].textContent = "두 수익률이 거의 같습니다. 약속은 그대로이고 가격만 낮아졌습니다.";
+        else if (gap < 0) dom["manual-state-text"].textContent = "현재 기존 채권 수익률 " + formatPercent(ytm) + "는 시장 5.00%보다 낮아, 새 기회가 더 매력적입니다.";
+        else dom["manual-state-text"].textContent = "현재 기존 채권 수익률 " + formatPercent(ytm) + "는 시장 5.00%보다 높아, 이 가격이라면 기존 채권 쪽으로 수요가 몰립니다.";
+      },
+      auto: function () {
+        var target = BondModel.price({ face: 100, couponRate: 3, marketRate: state.auto.marketRate, years: state.auto.years });
+        dom["auto-current-price"].textContent = formatMoney(state.auto.currentPrice);
+        dom["auto-target-price"].textContent = formatMoney(target);
+        dom["auto-change"].textContent = (state.auto.currentPrice >= 100 ? "+" : "") + formatPercent((state.auto.currentPrice / 100 - 1) * 100);
+        dom["auto-status"].textContent = state.auto.running ? "조정 중" : state.auto.finished ? "균형 도착" : state.auto.tick ? "일시정지" : "대기";
+        document.querySelectorAll("[data-auto-rate]").forEach(function (button) { button.setAttribute("aria-pressed", String(Number(button.dataset.autoRate) === state.auto.marketRate)); });
+        document.querySelectorAll("[data-auto-years]").forEach(function (button) { button.setAttribute("aria-pressed", String(Number(button.dataset.autoYears) === state.auto.years)); });
+        var mapY = function (price) { return Math.max(28, Math.min(232, 126 - (price - 100) * 8.4)); };
+        var points = state.auto.trace.map(function (price, index) { return (58 + index * 61.3) + "," + mapY(price); });
+        dom["auto-chart-line"].setAttribute("points", points.join(" "));
+        dom["auto-chart-dots"].replaceChildren();
+        state.auto.trace.forEach(function (price, index) {
+          var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("class", "chart-dot"); circle.setAttribute("cx", String(58 + index * 61.3)); circle.setAttribute("cy", String(mapY(price))); circle.setAttribute("r", "5"); dom["auto-chart-dots"].appendChild(circle);
+        });
+        var targetY = mapY(target);
+        dom["auto-target-line"].setAttribute("y1", String(targetY)); dom["auto-target-line"].setAttribute("y2", String(targetY));
+        dom["auto-target-label"].setAttribute("y", String(Math.max(20, targetY - 7))); dom["auto-target-label"].textContent = "경쟁선 " + formatMoney(target);
+        dom["auto-chart-desc"].textContent = "가격 100달러에서 시작해 시장금리 " + state.auto.marketRate + "%에 맞는 " + formatMoney(target) + "로 조정되는 과정. 현재 " + formatMoney(state.auto.currentPrice) + ".";
+        dom["auto-rounds"].replaceChildren();
+        state.auto.trace.forEach(function (price, index) { var item = document.createElement("li"); item.textContent = index + "회 · " + formatMoney(price); dom["auto-rounds"].appendChild(item); });
+        Renderer.history();
+      },
+      history: function () {
+        dom["scenario-history"].replaceChildren();
+        if (!HistoryRecorder.entries.length) { var empty = document.createElement("li"); empty.textContent = "아직 완료한 시나리오가 없습니다."; dom["scenario-history"].appendChild(empty); return; }
+        HistoryRecorder.entries.forEach(function (entry) {
+          var item = document.createElement("li"); var title = document.createElement("strong"); var result = document.createElement("span"); var note = document.createElement("small");
+          title.textContent = "시장 " + entry.rate + "% · " + entry.years + "년"; result.textContent = formatMoney(entry.price); note.textContent = "액면 대비 " + (entry.change >= 0 ? "+" : "") + formatPercent(entry.change) + " · 쿠폰 약속은 연 $3로 유지";
+          item.append(title, result, note); dom["scenario-history"].appendChild(item);
+        });
+      },
+      transfer: function () {
+        document.querySelectorAll("[data-prediction]").forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.prediction === state.transfer.choice)); });
+      },
+      sandbox: function () {
+        var spec = state.sandbox;
+        var price = BondModel.price(spec);
+        var relation = BondModel.relation(spec.couponRate, spec.marketRate);
+        dom["sandbox-coupon-output"].textContent = formatPercent(spec.couponRate, 1);
+        dom["sandbox-rate-output"].textContent = formatPercent(spec.marketRate, 1);
+        dom["sandbox-years-output"].textContent = spec.years + "년";
+        dom["sandbox-price"].textContent = formatMoney(price);
+        var phrase = relation === "above" ? "높아" : relation === "below" ? "낮아" : "같아";
+        var resultPhrase = relation === "above" ? "올라갑니다" : relation === "below" ? "내려갑니다" : "액면과 같습니다";
+        dom["sandbox-arrow"].textContent = relation === "above" ? "↗" : relation === "below" ? "↘" : "→";
+        dom["sandbox-explanation"].textContent = "쿠폰 " + formatPercent(spec.couponRate, 1) + "가 시장금리 " + formatPercent(spec.marketRate, 1) + "보다 " + phrase + ", 같은 수익률이 되려면 가격은 " + resultPhrase + ".";
+        var flows = BondModel.cashflows(spec); dom["sandbox-promises"].replaceChildren();
+        flows.forEach(function (flow) { var bar = document.createElement("span"); bar.style.height = Math.max(8, Math.min(100, flow / (spec.face + spec.face * spec.couponRate / 100) * 100)) + "%"; dom["sandbox-promises"].appendChild(bar); });
+        dom["sandbox-promises"].setAttribute("aria-label", spec.years + "년 현금흐름. " + (spec.years > 1 ? "처음 " + (spec.years - 1) + "년은 각각 " + formatMoney(flows[0]) + ", " : "") + "마지막 해 " + formatMoney(flows[flows.length - 1]) + ".");
+        dom["sandbox-cashflow-text"].textContent = "현금흐름: " + (spec.years > 1 ? "1~" + (spec.years - 1) + "년 각각 " + formatMoney(flows[0]) + ", " : "") + spec.years + "년 " + formatMoney(flows[flows.length - 1]) + ". 시장금리를 바꿔도 이 줄은 변하지 않습니다.";
+        var difference = price - spec.face;
+        dom["sandbox-feedback"].textContent = relation === "same" ? "쿠폰과 시장금리가 같아 모델 가격도 정확히 액면 $100입니다." : "현재 값에서는 액면보다 " + formatMoney(Math.abs(difference)) + (difference > 0 ? " 높은" : " 낮은") + " 가격이 시장금리 " + formatPercent(spec.marketRate, 1) + "와 균형을 이룹니다.";
+      },
+      all: function () { this.manual(); this.auto(); this.transfer(); this.sandbox(); StageController.sync(); }
+    };
+
+    var AutoEngine = {
+      timer: null,
+      reduced: window.matchMedia("(prefers-reduced-motion: reduce)"),
+      target: function () { return BondModel.price({ face: 100, couponRate: 3, marketRate: state.auto.marketRate, years: state.auto.years }); },
+      clear: function () { if (this.timer) window.clearTimeout(this.timer); this.timer = null; },
+      resetRun: function () { this.clear(); state.auto.currentPrice = 100; state.auto.tick = 0; state.auto.trace = [100]; state.auto.running = false; state.auto.finished = false; state.auto.recorded = false; Renderer.auto(); },
+      schedule: function () { var self = this; this.clear(); this.timer = window.setTimeout(function () { self.step(); }, 650 / state.auto.speed); },
+      play: function () {
+        if (!state.unlocked.auto) return;
+        if (state.auto.finished) this.resetRun();
+        state.auto.running = true;
+        if (this.reduced.matches) { state.auto.currentPrice = this.target(); state.auto.tick = 9; state.auto.trace.push(state.auto.currentPrice); this.finish(); return; }
+        Renderer.auto(); this.schedule();
+      },
+      pause: function () { this.clear(); state.auto.running = false; Renderer.auto(); dom["auto-feedback"].textContent = "잠시 멈췄습니다. 지금까지의 가격 기록은 그대로 남아 있습니다."; },
+      step: function () {
+        var target = this.target(); state.auto.tick += 1;
+        if (state.auto.tick >= 9) state.auto.currentPrice = target; else state.auto.currentPrice += (target - state.auto.currentPrice) * .42;
+        state.auto.trace.push(state.auto.currentPrice); Renderer.auto();
+        if (state.auto.tick >= 9 || Math.abs(state.auto.currentPrice - target) < .01) this.finish(); else this.schedule();
+      },
+      finish: function () {
+        this.clear(); state.auto.currentPrice = this.target(); state.auto.trace[state.auto.trace.length - 1] = state.auto.currentPrice; state.auto.running = false; state.auto.finished = true;
+        if (!state.auto.recorded) { HistoryRecorder.record({ rate: state.auto.marketRate, years: state.auto.years, price: state.auto.currentPrice, change: (state.auto.currentPrice / 100 - 1) * 100 }); state.auto.recorded = true; }
+        StageController.unlockMaturity(); Renderer.auto();
+        var direction = state.auto.currentPrice < 99.999 ? "내려갔습니다" : state.auto.currentPrice > 100.001 ? "올라갔습니다" : "그대로입니다";
+        dom["auto-feedback"].textContent = "시장금리 " + state.auto.marketRate + "%에 맞춰 가격은 " + formatMoney(state.auto.currentPrice) + "로 " + direction + ". 연 $3의 약속은 어느 라운드에서도 바뀌지 않았습니다.";
+      }
+    };
+
+    var Controller = {
+      setManualPrice: function (value) { state.manual.price = Math.max(80, Math.min(110, value)); dom["manual-price-input"].value = String(state.manual.price); Renderer.manual(); },
+      submitManual: function () {
+        state.manual.attempts += 1; var target = BondModel.price(Scenarios.manual); var gap = state.manual.price - target;
+        if (Math.abs(gap) <= .75) {
+          state.manual.complete = true; StageController.unlockAuto(); dom["manual-feedback"].dataset.tone = "success";
+          dom["manual-feedback"].innerHTML = "<strong>경쟁 가능한 가격입니다: " + formatMoney(target) + "</strong>약속된 $3·$3·$3·$3·$103은 그대로인데, 오늘 가격을 낮추자 만기수익률이 5%에 맞았습니다. 이 미래 현금흐름을 시장금리로 환산한 값을 현재가치라고 부릅니다.";
+        } else if (gap > 0) {
+          dom["manual-feedback"].dataset.tone = "try"; dom["manual-feedback"].innerHTML = "<strong>아직 " + formatMoney(gap) + " 비쌉니다.</strong>같은 미래 돈을 더 비싸게 사면 수익률은 5%보다 낮습니다. 가격을 더 내려 보세요.";
+        } else {
+          dom["manual-feedback"].dataset.tone = "try"; dom["manual-feedback"].innerHTML = "<strong>경쟁선보다 " + formatMoney(Math.abs(gap)) + " 쌉니다.</strong>이 가격에서는 수익률이 5%보다 높아 매수자가 몰리며 가격을 다시 밀어 올릴 여지가 있습니다.";
+        }
+      },
+      selectAutoRate: function (rate) { AutoEngine.clear(); state.auto.marketRate = rate; state.auto.years = 5; AutoEngine.resetRun(); dom["auto-feedback"].textContent = "시장금리 " + rate + "% 프리셋을 골랐습니다. 연 $3 약속은 고정하고 가격 경로만 다시 계산합니다."; },
+      selectAutoYears: function (years) { AutoEngine.clear(); state.auto.marketRate = 5; state.auto.years = years; AutoEngine.resetRun(); dom["auto-feedback"].textContent = "시장금리 5%와 연 $3 약속은 고정했습니다. 남은 만기만 " + years + "년으로 바꿨습니다."; },
+      predict: function (choice) {
+        state.transfer.choice = choice; Renderer.transfer(); StageController.unlockSandbox(); var correct = choice === "above"; var price = BondModel.price(Scenarios.transfer); dom["transfer-feedback"].dataset.tone = correct ? "success" : "try";
+        dom["transfer-feedback"].innerHTML = correct ? "<strong>맞습니다. 모델 가격은 " + formatMoney(price) + "입니다.</strong>연 6% 약속이 새 2% 기회보다 좋아서, 매수자는 액면보다 더 내고서야 같은 2% 수익률을 얻습니다." : "<strong>이 경우는 $100보다 위, " + formatMoney(price) + "입니다.</strong>연 6% 약속이 새 시장의 2%보다 좋습니다. 그 이점이 사라질 만큼 오늘 가격이 올라가야 둘의 수익률이 맞습니다.";
+      },
+      resetManual: function () { state.manual.price = 100; dom["manual-price-input"].value = "100"; dom["manual-feedback"].dataset.tone = ""; dom["manual-feedback"].textContent = "가격을 낮추면 똑같은 $3·$3·$3·$3·$103을 더 적은 돈으로 살 수 있어 수익률이 올라갑니다."; Renderer.manual(); },
+      resetSandbox: function () { state.sandbox = Object.assign({}, Scenarios.resetSandbox); dom["sandbox-coupon"].value = "6"; dom["sandbox-rate"].value = "2"; dom["sandbox-years"].value = "8"; Renderer.sandbox(); },
+      resetAll: function () { AutoEngine.clear(); state = freshState(); HistoryRecorder.reset(); dom["manual-price-input"].value = "100"; dom["speed-control"].value = "1"; dom["sandbox-coupon"].value = "6"; dom["sandbox-rate"].value = "2"; dom["sandbox-years"].value = "8"; dom["manual-feedback"].dataset.tone = ""; dom["manual-feedback"].textContent = "가격을 낮추면 똑같은 $3·$3·$3·$3·$103을 더 적은 돈으로 살 수 있어 수익률이 올라갑니다."; dom["auto-feedback"].textContent = "시장은 $100에서 출발합니다. 새 5% 기회와 맞서려면 기존 3% 채권의 가격이 내려가야 합니다."; dom["transfer-feedback"].dataset.tone = ""; dom["transfer-feedback"].textContent = "기존 약속의 6%가 새 시장의 2%보다 높습니다. 이 차이를 오늘 가격이 어떻게 흡수할지 예상해 보세요."; Renderer.all(); document.querySelector("[data-stage=manual]").scrollIntoView({ block: "start", behavior: AutoEngine.reduced.matches ? "auto" : "smooth" }); }
+    };
+
+    dom["manual-price-input"].addEventListener("input", function (event) { Controller.setManualPrice(Number(event.target.value)); });
+    dom["manual-minus"].addEventListener("click", function () { Controller.setManualPrice(state.manual.price - 1); });
+    dom["manual-plus"].addEventListener("click", function () { Controller.setManualPrice(state.manual.price + 1); });
+    dom["manual-submit"].addEventListener("click", function () { Controller.submitManual(); });
+    document.querySelectorAll("[data-auto-rate]").forEach(function (button) { button.addEventListener("click", function () { Controller.selectAutoRate(Number(button.dataset.autoRate)); }); });
+    document.querySelectorAll("[data-auto-years]").forEach(function (button) { button.addEventListener("click", function () { Controller.selectAutoYears(Number(button.dataset.autoYears)); }); });
+    document.getElementById("auto-play").addEventListener("click", function () { AutoEngine.play(); });
+    document.getElementById("auto-pause").addEventListener("click", function () { AutoEngine.pause(); });
+    document.getElementById("auto-replay").addEventListener("click", function () { AutoEngine.resetRun(); AutoEngine.play(); });
+    dom["speed-control"].addEventListener("change", function (event) { state.auto.speed = Number(event.target.value); if (state.auto.running) AutoEngine.schedule(); });
+    document.querySelectorAll("[data-prediction]").forEach(function (button) { button.addEventListener("click", function () { Controller.predict(button.dataset.prediction); }); });
+    ["coupon", "rate", "years"].forEach(function (key) { dom["sandbox-" + key].addEventListener("input", function (event) { var property = key === "coupon" ? "couponRate" : key === "rate" ? "marketRate" : "years"; state.sandbox[property] = Number(event.target.value); Renderer.sandbox(); }); });
+    document.querySelectorAll("[data-sandbox-preset]").forEach(function (button) { button.addEventListener("click", function () { var preset = button.dataset.sandboxPreset; state.sandbox.marketRate = preset === "up" ? 5 : preset === "down" ? 1 : state.sandbox.couponRate; dom["sandbox-rate"].value = String(state.sandbox.marketRate); Renderer.sandbox(); }); });
+    document.querySelectorAll("[data-action=reset]").forEach(function (button) { button.addEventListener("click", function () { var scope = button.dataset.scope; if (scope === "all") Controller.resetAll(); else if (scope === "manual") Controller.resetManual(); else if (scope === "automated") AutoEngine.resetRun(); else if (scope === "sandbox") Controller.resetSandbox(); }); });
+    Renderer.all();
+  </script>
+</body>
+</html>
