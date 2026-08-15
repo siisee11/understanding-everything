@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="금리가 오를 때 기존 고정금리채의 가격이 내려가는 이유를 예측, 가격 맞추기, 금리 곡선 실험으로 발견하는 초보자용 설명 페이지">
+  <meta name="explainer-ui" content="declaude-editorial-v1">
+  <meta name="learning-design" content="discovery-first-v1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b3541e'/%3E%3Cpath d='M8 11h16M8 16h16M8 21h10' stroke='%23faf9f6' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>금리가 오르면, 왜 내 채권 가격은 내려갈까?</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1a1a18;
+      --muted: #6b6862;
+      --paper: #faf9f6;
+      --panel: #ffffff;
+      --inset: #faf8f1;
+      --line: #e3e0d8;
+      --accent: #b3541e;
+      --accent-soft: #f3e8e0;
+      --content-width: 45.125rem;
+      --radius: 0.75rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-underline-offset: 0.16em;
+    }
+
+    a:hover { text-decoration-thickness: 0.14em; }
+
+    :focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(calc(100% - 2rem), var(--content-width));
+      margin-inline: auto;
+    }
+
+    header { padding: 3.5rem 0 1rem; }
+
+    .eyebrow {
+      margin: 0 0 0.65rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    h1, h2, h3 {
+      overflow-wrap: break-word;
+      word-break: keep-all;
+      text-wrap: balance;
+    }
+
+    h1 {
+      margin: 0 0 0.55rem;
+      font-size: clamp(2rem, 5vw, 2.1rem);
+      line-height: 1.15;
+      letter-spacing: -0.035em;
+    }
+
+    .lede {
+      margin: 0.7rem 0;
+      font-size: 1rem;
+    }
+
+    .reading-note {
+      margin: 0.7rem 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    main { padding-bottom: 5rem; }
+
+    section { padding: 0; }
+
+    .step-title,
+    .sources h2 {
+      margin: 3rem 0 0.3rem;
+      font-size: 1.3rem;
+      line-height: 1.65;
+      letter-spacing: -0.015em;
+    }
+
+    .step-number { color: var(--accent); }
+
+    .goal {
+      margin: 0.55rem 0 1.35rem;
+      padding: 0.15rem 0 0.15rem 0.8rem;
+      border-left: 3px solid var(--accent);
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .interactive {
+      margin: 1.25rem 0;
+      padding: 1.2rem 1.3rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .model {
+      margin-bottom: 1rem;
+      padding: 0.65rem 0.95rem;
+      border-left: 3px solid var(--accent);
+      border-radius: 0.5rem;
+      background: var(--inset);
+    }
+
+    .model-label {
+      margin: 0 0 0.25rem;
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .model p:last-child { margin-bottom: 0; }
+
+    .promise-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .promise {
+      min-width: 0;
+      padding: 0.9rem;
+      border-top: 2px solid var(--line);
+      background: var(--inset);
+    }
+
+    .promise strong,
+    .promise span { display: block; }
+
+    .promise strong { font-size: 0.95rem; }
+
+    .promise span {
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .promise .receipt {
+      margin-top: 0.65rem;
+      color: var(--ink);
+      font-size: 1.05rem;
+      font-weight: 750;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: end;
+      margin: 1rem 0;
+    }
+
+    label {
+      display: grid;
+      min-width: min(100%, 13rem);
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 650;
+    }
+
+    input, select, button { font: inherit; }
+
+    input[type="range"] {
+      width: 100%;
+      min-height: 2.75rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    button {
+      min-height: 2.75rem;
+      padding: 0.5rem 1.1rem;
+      border: 1px solid var(--ink);
+      border-radius: 0.5rem;
+      background: var(--ink);
+      color: var(--paper);
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.12); }
+
+    button.secondary {
+      border-color: var(--line);
+      background: transparent;
+      color: var(--muted);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+
+    .range-heading,
+    .bar-labels,
+    .maturity-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: baseline;
+    }
+
+    .range-heading output,
+    .maturity-heading strong {
+      color: var(--ink);
+      font-size: 1rem;
+    }
+
+    .range-ends {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 500;
+    }
+
+    .return-bars { margin: 1.1rem 0; }
+
+    .return-row + .return-row { margin-top: 0.8rem; }
+
+    .bar-labels {
+      margin-bottom: 0.25rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .bar-labels strong { color: var(--ink); }
+
+    .track {
+      position: relative;
+      height: 0.8rem;
+      overflow: hidden;
+      border-radius: 0.4rem;
+      background: var(--line);
+    }
+
+    .bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width 180ms ease;
+    }
+
+    .bar.reference { background: var(--ink); }
+
+    .output {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .output strong { color: var(--ink); }
+
+    .takeaway { margin: 1rem 0 0; }
+
+    .cite {
+      margin-left: 0.12em;
+      font-size: 0.75em;
+      font-weight: 700;
+      text-decoration: none;
+      vertical-align: super;
+    }
+
+    .term {
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.18em;
+    }
+
+    .chart-wrap {
+      overflow-x: auto;
+      margin: 0.6rem 0;
+    }
+
+    .price-chart {
+      display: block;
+      width: 100%;
+      min-width: 31rem;
+      height: auto;
+    }
+
+    .chart-grid { stroke: var(--line); stroke-width: 1; }
+    .chart-axis { stroke: var(--muted); stroke-width: 1.2; }
+    .chart-line {
+      fill: none;
+      stroke: var(--accent);
+      stroke-linecap: round;
+      stroke-width: 4;
+    }
+    .chart-point {
+      fill: var(--panel);
+      stroke: var(--ink);
+      stroke-width: 3;
+    }
+    .chart-label {
+      fill: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+    }
+    .chart-point-label {
+      fill: var(--ink);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    fieldset.segmented {
+      margin: 1rem 0;
+      padding: 0;
+      border: 0;
+    }
+
+    fieldset.segmented legend {
+      margin-bottom: 0.45rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 650;
+    }
+
+    .segment-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .segment-option {
+      position: relative;
+      display: inline-flex;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .segment-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .segment-option span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      padding: 0.45rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      background: transparent;
+    }
+
+    .segment-option input:checked + span {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .segment-option input:focus-visible + span {
+      outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      outline-offset: 3px;
+    }
+
+    .cashflow-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin: 1rem 0;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      background: var(--inset);
+    }
+
+    .cash-payment {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.8rem;
+      min-height: 2.1rem;
+      padding: 0.2rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 0.4rem;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .cash-payment:last-child {
+      border-color: var(--accent);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .price-comparison { margin: 1rem 0; }
+
+    .price-row + .price-row { margin-top: 0.75rem; }
+
+    .price-track {
+      height: 1.15rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 0.3rem;
+      background: var(--inset);
+    }
+
+    .price-bar {
+      height: 100%;
+      background: var(--ink);
+      transition: width 180ms ease;
+    }
+
+    .price-bar.after { background: var(--accent); }
+
+    .causal-chain {
+      margin: 1.25rem 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: cause;
+    }
+
+    .causal-chain li {
+      position: relative;
+      margin: 0;
+      padding: 0.7rem 0 0.7rem 2.6rem;
+      border-top: 1px solid var(--line);
+      counter-increment: cause;
+    }
+
+    .causal-chain li::before {
+      position: absolute;
+      top: 0.72rem;
+      left: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      content: counter(cause);
+      font-size: 0.78rem;
+      font-weight: 750;
+      line-height: 1.75rem;
+      text-align: center;
+    }
+
+    .boundary {
+      margin: 1.2rem 0;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--inset);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    details.optional-depth {
+      margin: 1.25rem 0;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--line);
+    }
+
+    details.optional-depth summary {
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    .formula {
+      overflow-x: auto;
+      margin: 0.8rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: var(--inset);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    .sources {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .sources li + li { margin-top: 0.6rem; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 10;
+      top: 0.7rem;
+      left: 0.7rem;
+      padding: 0.5rem 0.75rem;
+      transform: translateY(-160%);
+      border-radius: 0.35rem;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      .shell { width: min(calc(100% - 1.25rem), var(--content-width)); }
+      header { padding-top: 2.75rem; }
+      h1 { font-size: 1.9rem; }
+      .interactive { padding: 1rem; }
+      .controls > * { flex: 1 1 100%; }
+      .promise-row { grid-template-columns: 1fr; }
+      .price-chart { min-width: 28rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="declaude-editorial">
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="shell">
+    <p class="eyebrow">5–8분</p>
+    <h1>금리가 오르면, 왜 내 채권 가격은 내려갈까?</h1>
+    <p class="lede">당신은 오늘 100만원을 내고, 1년 뒤 103만원을 받기로 했습니다. 그런데 바로 다음 날, 똑같이 믿을 만한 새 약속이 1년 뒤 105만원을 준다고 합니다. 기존 약속을 오늘 다시 판다면 누가 100만원을 그대로 낼까요?</p>
+    <p class="reading-note">정의부터 외우지 않습니다. 먼저 고르고, 가격을 바꾸고, 그 뒤에 방금 발견한 관계의 이름을 붙입니다.</p>
+  </header>
+
+  <main class="shell" id="main">
+    <section aria-labelledby="step-1-title">
+      <h2 class="step-title" id="step-1-title"><span class="step-number">1.</span> 같은 가격이면 무엇을 고를까?</h2>
+      <p class="goal">100만원을 오늘 내고 1년 뒤 받는 금액만 비교해 보세요.</p>
+      <p>두 약속의 안전성, 만기, 세금이 모두 같다고 가정합니다. 다른 것은 1년 뒤 받는 금액뿐입니다. 어느 쪽을 고르겠어요?</p>
+
+      <figure class="interactive" aria-labelledby="choice-caption">
+        <div class="model">
+          <p class="model-label">상황</p>
+          <p>오늘 내는 돈은 둘 다 <strong>100만원</strong>입니다.</p>
+        </div>
+        <div class="promise-row" aria-label="두 지급 약속 비교">
+          <div class="promise">
+            <strong>어제 만든 약속</strong>
+            <span>오늘 100만원 지급</span>
+            <span class="receipt">1년 뒤 103만원 받기</span>
+          </div>
+          <div class="promise">
+            <strong>오늘 새로 나온 약속</strong>
+            <span>오늘 100만원 지급</span>
+            <span class="receipt">1년 뒤 105만원 받기</span>
+          </div>
+        </div>
+        <div class="controls" aria-label="예상 선택">
+          <button type="button" class="secondary prediction" data-pick="old" aria-pressed="false">어제 약속을 고른다</button>
+          <button type="button" class="secondary prediction" data-pick="new" aria-pressed="false">오늘 약속을 고른다</button>
+        </div>
+        <p class="output" id="choice-feedback" role="status" aria-live="polite">먼저 하나를 골라 보세요. 정답 점수 대신, 선택 뒤에 생기는 일을 보여드립니다.</p>
+        <figcaption id="choice-caption" class="takeaway"><strong>관찰할 것:</strong> 같은 가격이라면 더 많은 돈을 돌려주는 새 약속이 기존 약속의 경쟁자가 됩니다.</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="step-2-title">
+      <h2 class="step-title" id="step-2-title"><span class="step-number">2.</span> 기존 약속이 팔리려면?</h2>
+      <p class="goal">1년 뒤 받는 103만원은 그대로 두고, 오늘 가격만 바꿔 보세요.</p>
+      <p>기존 약속은 이미 쓰였으므로 103만원이라는 지급액을 마음대로 늘릴 수 없습니다. 대신 오늘 사는 가격을 낮추면, 싸게 사서 같은 103만원을 받으므로 수익률이 올라갑니다.</p>
+
+      <figure class="interactive" aria-labelledby="tuner-caption">
+        <div class="model">
+          <p class="model-label">고정된 약속</p>
+          <p>1년 뒤 <strong>103만원</strong> 받기 · 새 약속의 1년 수익률 <strong>5%</strong></p>
+        </div>
+        <label for="old-price">
+          <span class="range-heading"><span>기존 약속의 오늘 가격</span><output id="old-price-output" for="old-price">100.0만원</output></span>
+          <input id="old-price" type="range" min="94" max="102" step="0.1" value="100" aria-describedby="price-feedback">
+          <span class="range-ends"><span>94만원</span><span>102만원</span></span>
+        </label>
+        <div class="return-bars" aria-label="기존 약속과 새 약속의 1년 수익률 비교">
+          <div class="return-row">
+            <div class="bar-labels"><span>기존 약속</span><strong id="old-return-label">3.00%</strong></div>
+            <div class="track"><div class="bar" id="old-return-bar" style="width: 30%"></div></div>
+          </div>
+          <div class="return-row">
+            <div class="bar-labels"><span>새 약속</span><strong>5.00%</strong></div>
+            <div class="track"><div class="bar reference" style="width: 50%"></div></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button type="button" id="match-rate">5%에 가깝게 맞추기</button>
+          <button type="button" class="secondary" id="reset-price">처음 가격으로</button>
+        </div>
+        <p class="output" id="price-feedback" role="status" aria-live="polite">100만원에 사서 103만원을 받으면 1년 수익률은 3%입니다. 새 약속의 5%보다 낮습니다.</p>
+        <figcaption id="tuner-caption" class="takeaway"><strong>핵심:</strong> 미래 지급액이 고정돼 있을 때, 원하는 수익률을 높이는 방법은 오늘 가격을 낮추는 것입니다.</figcaption>
+      </figure>
+
+      <p>이제 이름을 붙여 봅시다. 이런 지급 약속이 <strong class="term">채권</strong>이고, 100만원은 만기에 돌려받는 <strong class="term">액면가</strong>, 매년 약속된 3만원은 <strong class="term">이자(쿠폰)</strong>입니다. 새 채권이 5%를 주는 상황에서 기존 3% 고정금리채는 약 98.1만원으로 내려가야 1년 수익률이 비슷해집니다. 금리 상승 때 기존 채권을 만기 전에 팔려면 액면가보다 낮은 가격이 필요할 수 있다는 설명과 같은 원리입니다.<a class="cite" href="#source-1" aria-label="출처 1로 이동">[1]</a></p>
+
+      <details class="optional-depth">
+        <summary>계산으로 확인하기 — 왜 98.1만원인가요?</summary>
+        <p>1년 뒤 받을 103만원을 새 채권과 같은 5% 수익률로 거꾸로 할인합니다.</p>
+        <p class="formula">오늘 가격 = 103만원 ÷ (1 + 0.05) = 98.095…만원</p>
+        <p>98.095만원에 사서 103만원을 받으면 차이는 약 4.905만원이고, 이를 산 가격으로 나누면 약 5%입니다. 이 페이지는 이해를 위해 1년에 한 번 지급한다고 단순화했습니다.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="step-3-title">
+      <h2 class="step-title" id="step-3-title"><span class="step-number">3.</span> 이제 시장금리를 움직여 보자</h2>
+      <p class="goal">기존 채권의 3% 지급 약속은 고정한 채, 비슷한 새 채권이 주는 금리만 움직이세요.</p>
+      <p>새 채권의 금리가 바뀔 때마다 기존 채권이 경쟁할 수 있는 오늘 가격을 계산합니다. 슬라이더를 3%의 양쪽으로 오가며 점의 방향을 보세요.</p>
+
+      <figure class="interactive" aria-labelledby="curve-caption">
+        <div class="model">
+          <p class="model-label">비교 조건</p>
+          <p>1년 뒤 기존 채권이 주는 돈 <strong>103만원</strong> · 다른 위험과 조건은 같다고 가정</p>
+        </div>
+        <label for="market-rate">
+          <span class="range-heading"><span>비슷한 새 채권의 시장금리</span><output id="market-rate-output" for="market-rate">5.0%</output></span>
+          <input id="market-rate" type="range" min="0" max="8" step="0.5" value="5" aria-describedby="curve-feedback">
+          <span class="range-ends"><span>0%</span><span>8%</span></span>
+        </label>
+        <div class="chart-wrap" tabindex="0" aria-label="좌우로 스크롤 가능한 채권 가격 곡선">
+          <svg class="price-chart" viewBox="0 0 640 290" role="img" aria-labelledby="chart-title chart-desc">
+            <title id="chart-title">시장금리와 기존 3% 채권 가격의 관계</title>
+            <desc id="chart-desc">시장금리 5퍼센트일 때 기존 채권의 비교 가격은 약 98.1만원입니다. 금리가 높아질수록 곡선이 내려갑니다.</desc>
+            <line class="chart-grid" x1="64" y1="24" x2="600" y2="24"></line>
+            <line class="chart-grid" x1="64" y1="111.2" x2="600" y2="111.2"></line>
+            <line class="chart-grid" x1="64" y1="198.4" x2="600" y2="198.4"></line>
+            <line class="chart-axis" x1="64" y1="24" x2="64" y2="242"></line>
+            <line class="chart-axis" x1="64" y1="242" x2="600" y2="242"></line>
+            <text class="chart-label" x="64" y="15">가격(만원)</text>
+            <text class="chart-label" x="54" y="28" text-anchor="end">104</text>
+            <text class="chart-label" x="54" y="115" text-anchor="end">100</text>
+            <text class="chart-label" x="54" y="202" text-anchor="end">96</text>
+            <text class="chart-label" x="64" y="260" text-anchor="middle">0%</text>
+            <text class="chart-label" x="198" y="260" text-anchor="middle">2%</text>
+            <text class="chart-label" x="332" y="260" text-anchor="middle">4%</text>
+            <text class="chart-label" x="466" y="260" text-anchor="middle">6%</text>
+            <text class="chart-label" x="600" y="260" text-anchor="middle">8%</text>
+            <text class="chart-label" x="600" y="282" text-anchor="end">시장금리</text>
+            <path class="chart-line" id="price-curve" d=""></path>
+            <circle class="chart-point" id="curve-point" cx="399" cy="153" r="7"></circle>
+            <text class="chart-point-label" id="curve-point-label" x="399" y="137" text-anchor="middle">98.1만원</text>
+          </svg>
+        </div>
+        <p class="output" id="curve-feedback" role="status" aria-live="polite"><strong>시장금리 5.0% → 기존 채권 가격 약 98.1만원.</strong> 새 채권보다 적은 이자를 주는 만큼 오늘 가격이 액면가 아래로 내려갑니다.</p>
+        <figcaption id="curve-caption" class="takeaway"><strong>발견한 관계:</strong> 다른 조건이 같다면 시장금리와 기존 고정금리채 가격은 반대 방향으로 움직입니다. 이 가격 변동 가능성을 <strong class="term">금리 위험</strong>이라고 부릅니다.<a class="cite" href="#source-2" aria-label="출처 2로 이동">[2]</a></figcaption>
+      </figure>
+
+      <p>반대도 성립합니다. 시장금리가 3%보다 낮아지면 3%를 계속 주는 기존 채권은 더 매력적이므로 가격이 100만원 위로 올라갈 수 있습니다. 미 재무부도 채권의 만기수익률이 표면금리보다 높으면 가격은 액면가 아래, 낮으면 액면가 위라고 설명합니다.<a class="cite" href="#source-3" aria-label="출처 3으로 이동">[3]</a></p>
+    </section>
+
+    <section aria-labelledby="step-4-title">
+      <h2 class="step-title" id="step-4-title"><span class="step-number">4.</span> 남은 시간이 길면?</h2>
+      <p class="goal">똑같이 3%에서 5%로 금리가 올랐을 때, 지급 약속이 몇 년 남았는지만 바꿔 보세요.</p>
+      <p>1년짜리는 낮은 3% 이자를 한 번만 견디면 끝납니다. 10년짜리는 새 채권보다 낮은 지급을 여러 해 기다려야 하므로 더 큰 가격 조정이 필요합니다.</p>
+
+      <figure class="interactive" aria-labelledby="maturity-caption">
+        <div class="model">
+          <p class="model-label">전이 실험</p>
+          <p>쿠폰 3% · 시장금리 <strong>3% → 5%</strong> · 액면가 100만원 · 연 1회 지급</p>
+        </div>
+        <fieldset class="segmented">
+          <legend>남은 만기를 바꿔 보세요</legend>
+          <div class="segment-options">
+            <label class="segment-option" for="maturity-1"><input id="maturity-1" type="radio" name="maturity" value="1"><span>1년</span></label>
+            <label class="segment-option" for="maturity-5"><input id="maturity-5" type="radio" name="maturity" value="5" checked><span>5년</span></label>
+            <label class="segment-option" for="maturity-10"><input id="maturity-10" type="radio" name="maturity" value="10"><span>10년</span></label>
+          </div>
+        </fieldset>
+        <div class="maturity-heading" aria-hidden="true"><span>남은 지급 약속</span><strong id="maturity-years-label">5년</strong></div>
+        <div class="cashflow-strip" id="cashflow-strip" aria-label="5년 동안 매년 3만원, 마지막 해에는 원금 포함 103만원을 받습니다">
+          <span class="cash-payment">1년 +3</span>
+          <span class="cash-payment">2년 +3</span>
+          <span class="cash-payment">3년 +3</span>
+          <span class="cash-payment">4년 +3</span>
+          <span class="cash-payment">5년 +103</span>
+        </div>
+        <div class="price-comparison" aria-label="금리 변동 전후 가격 비교">
+          <div class="price-row">
+            <div class="bar-labels"><span>시장금리 3%일 때</span><strong>100.0만원</strong></div>
+            <div class="price-track"><div class="price-bar" style="width: 100%"></div></div>
+          </div>
+          <div class="price-row">
+            <div class="bar-labels"><span>시장금리 5%일 때</span><strong id="after-price-label">91.3만원</strong></div>
+            <div class="price-track"><div class="price-bar after" id="after-price-bar" style="width: 91.3%"></div></div>
+          </div>
+        </div>
+        <p class="output" id="maturity-feedback" role="status" aria-live="polite"><strong>5년 남으면 약 91.3만원, 8.7% 하락.</strong> 낮은 3% 지급이 다섯 번 남아 있어 1년짜리보다 더 많이 할인됩니다.</p>
+        <figcaption id="maturity-caption" class="takeaway"><strong>전이한 결론:</strong> 쿠폰과 신용위험 등 다른 조건이 같다면, 만기가 긴 채권일수록 금리 변화에 가격이 더 민감한 편입니다.<a class="cite" href="#source-4" aria-label="출처 4로 이동">[4]</a></figcaption>
+      </figure>
+
+      <details class="optional-depth">
+        <summary>조금 더 깊게 — 여러 해짜리 가격과 만기수익률</summary>
+        <p>여러 해짜리 채권 가격은 각 해의 쿠폰과 마지막 원금을 시장금리로 하나씩 할인해 더합니다.</p>
+        <p class="formula">가격 = 3/(1+r) + 3/(1+r)² + … + 103/(1+r)ⁿ</p>
+        <p>여기서 이 합계를 현재 시장가격과 같게 만드는 연간 할인율을 <strong>만기수익률(YTM)</strong>이라고 합니다. 실제 계산은 지급 주기와 재투자 가정 등을 반영하므로 더 복잡할 수 있습니다.<a class="cite" href="#source-5" aria-label="출처 5로 이동">[5]</a></p>
+      </details>
+    </section>
+
+    <section aria-labelledby="step-5-title">
+      <h2 class="step-title" id="step-5-title"><span class="step-number">5.</span> 딱 한 문장으로 연결하기</h2>
+      <p class="goal">‘오늘 팔 가격’과 ‘만기에 받을 약속’을 구분하면 모순처럼 보이던 일이 풀립니다.</p>
+      <p><strong>금리가 오르면 기존 고정금리채의 약속된 현금은 그대로지만, 새 채권과 경쟁할 수 있도록 오늘의 시장가격이 내려갑니다.</strong></p>
+
+      <ol class="causal-chain" aria-label="금리 상승에서 채권 가격 하락까지의 인과관계">
+        <li>기존 채권의 쿠폰과 만기 원금은 이미 고정돼 있습니다.</li>
+        <li>비슷한 새 채권이 더 높은 금리를 주기 시작합니다.</li>
+        <li>같은 가격이면 구매자는 더 많이 주는 새 채권을 고릅니다.</li>
+        <li>기존 채권은 더 낮은 가격에 거래돼야 수익률이 새 수준에 가까워집니다.</li>
+      </ol>
+
+      <div class="boundary">
+        <strong>헷갈리기 쉬운 경계:</strong> 발행자가 약속대로 지급하고 만기까지 보유한다면 계약된 쿠폰과 액면가는 시장가격이 흔들려도 바뀌지 않습니다. 하지만 만기 전에 팔면 당시 가격이 액면가보다 높거나 낮을 수 있습니다.<a class="cite" href="#source-1" aria-label="출처 1로 이동">[1]</a>
+      </div>
+
+      <p>이 페이지의 숫자는 원리를 분리하기 위한 교육용 모델입니다. 고정금리, 연 1회 지급, 같은 신용위험, 세금·수수료·유동성·중도상환 없음, 모든 지급이 제때 이뤄진다고 가정했습니다. 실제 채권에는 신용위험, 물가위험, 유동성위험, 중도상환위험 등이 함께 존재할 수 있습니다.<a class="cite" href="#source-2" aria-label="출처 2로 이동">[2]</a> 개인 투자 판단이나 실시간 시장가격을 제공하지 않습니다.</p>
+    </section>
+
+    <section class="sources" id="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">출처와 모델 근거</h2>
+      <p>2026년 8월 15일 확인. 미국의 공식 투자자 교육·재무부 자료와 FINRA 교육 자료를 사용했습니다. 핵심 메커니즘은 관할과 무관한 채권 가격 원리지만, 상품 규칙과 지급 관행은 시장마다 다를 수 있습니다.</p>
+      <ol>
+        <li id="source-1"><a href="https://www.investor.gov/introduction-investing/investing-basics/investment-products/bonds-or-fixed-income-products/bonds">Investor.gov — Bonds FAQ</a>: 새 채권 금리가 오르면 기존 저금리 채권을 할인해 팔아야 할 수 있고, 만기 보유와 중도 매도의 차이를 설명합니다.</li>
+        <li id="source-2"><a href="https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-86">SEC Office of Investor Education and Advocacy — When Interest Rates Go Up, Prices of Fixed-Rate Bonds Fall</a>: 금리와 고정금리채 가격의 반대 움직임, 만기와 금리 위험을 설명합니다.</li>
+        <li id="source-3"><a href="https://www.treasurydirect.gov/marketable-securities/understanding-pricing/">U.S. TreasuryDirect — Understanding Pricing and Interest Rates</a>: 만기수익률과 표면금리의 상대적 크기에 따라 가격이 액면가 아래·같음·위에 놓이는 관계를 제시합니다.</li>
+        <li id="source-4"><a href="https://www.finra.org/investors/insights/bonds-interest-rate-changes-duration">FINRA — Brush Up on Bonds: Interest Rate Changes and Duration</a> (2024-09-19): 만기가 길수록 일반적으로 금리 변화에 더 민감하다는 설명과 다른 채권 위험을 제시합니다.</li>
+        <li id="source-5"><a href="https://www.finra.org/investors/insights/bond-yield-return">FINRA — Understanding Bond Yield and Return</a> (2022-08-11): 미래 쿠폰과 원금의 현재가치를 시장가격과 같게 하는 할인율로 만기수익률을 설명합니다.</li>
+      </ol>
+    </section>
+  </main>
+
+  <noscript>
+    <p class="shell">자바스크립트가 꺼져 있어도 핵심 설명과 초기 비교값은 읽을 수 있습니다. 슬라이더와 선택 피드백을 사용하려면 자바스크립트를 켜세요.</p>
+  </noscript>
+
+  <script>
+    "use strict";
+
+    const formatMoney = (value) => `${value.toFixed(1)}만원`;
+    const priceForOneYear = (marketRate) => 103 / (1 + marketRate / 100);
+
+    const choiceButtons = document.querySelectorAll(".prediction");
+    const choiceFeedback = document.getElementById("choice-feedback");
+    choiceButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        choiceButtons.forEach((candidate) => {
+          candidate.setAttribute("aria-pressed", String(candidate === button));
+        });
+        if (button.dataset.pick === "new") {
+          choiceFeedback.innerHTML = "<strong>오늘 약속 쪽으로 수요가 기웁니다.</strong> 같은 100만원을 내는데 1년 뒤 2만원을 더 받기 때문입니다. 이제 어제 약속의 가격을 바꿔 경쟁시켜 봅시다.";
+        } else {
+          choiceFeedback.innerHTML = "<strong>어제 약속은 같은 가격에서 불리합니다.</strong> 안전성과 만기가 같다면 100만원을 내고 103만원보다 105만원을 받는 쪽이 구매자에게 유리합니다. 기존 약속이 팔리려면 다른 조건이 바뀌어야 합니다.";
+        }
+      });
+    });
+
+    const oldPrice = document.getElementById("old-price");
+    const oldPriceOutput = document.getElementById("old-price-output");
+    const oldReturnLabel = document.getElementById("old-return-label");
+    const oldReturnBar = document.getElementById("old-return-bar");
+    const priceFeedback = document.getElementById("price-feedback");
+    const targetPrice = priceForOneYear(5);
+
+    function updatePriceTuner() {
+      const price = Number(oldPrice.value);
+      const returnRate = (103 / price - 1) * 100;
+      oldPriceOutput.textContent = formatMoney(price);
+      oldReturnLabel.textContent = `${returnRate.toFixed(2)}%`;
+      oldReturnBar.style.width = `${Math.min(100, Math.max(0, returnRate * 10))}%`;
+
+      if (Math.abs(returnRate - 5) < 0.06) {
+        priceFeedback.innerHTML = `<strong>${formatMoney(price)}에 사면 1년 수익률이 약 ${returnRate.toFixed(2)}%입니다.</strong> 새 약속의 5%와 거의 같아졌습니다. 미래의 103만원은 그대로이고 오늘 가격만 내려갔습니다.`;
+      } else if (returnRate < 5) {
+        priceFeedback.innerHTML = `<strong>1년 수익률 ${returnRate.toFixed(2)}%.</strong> 아직 새 약속의 5%보다 낮습니다. 기존 약속의 오늘 가격을 더 내려 보세요.`;
+      } else {
+        priceFeedback.innerHTML = `<strong>1년 수익률 ${returnRate.toFixed(2)}%.</strong> 이제 새 약속의 5%보다 높습니다. 가격을 조금 올리면 두 수익률이 가까워집니다.`;
+      }
+    }
+
+    oldPrice.addEventListener("input", updatePriceTuner);
+    document.getElementById("match-rate").addEventListener("click", () => {
+      oldPrice.value = targetPrice.toFixed(1);
+      updatePriceTuner();
+      oldPrice.focus();
+    });
+    document.getElementById("reset-price").addEventListener("click", () => {
+      oldPrice.value = "100";
+      updatePriceTuner();
+      oldPrice.focus();
+    });
+
+    const marketRate = document.getElementById("market-rate");
+    const marketRateOutput = document.getElementById("market-rate-output");
+    const curveFeedback = document.getElementById("curve-feedback");
+    const chartDesc = document.getElementById("chart-desc");
+    const priceCurve = document.getElementById("price-curve");
+    const curvePoint = document.getElementById("curve-point");
+    const curvePointLabel = document.getElementById("curve-point-label");
+    const chartWrap = document.querySelector(".chart-wrap");
+
+    const chartX = (rate) => 64 + (rate / 8) * 536;
+    const chartY = (price) => 24 + ((104 - price) / 10) * 218;
+
+    function buildCurve() {
+      const points = [];
+      for (let index = 0; index <= 80; index += 1) {
+        const rate = index / 10;
+        const command = index === 0 ? "M" : "L";
+        points.push(`${command} ${chartX(rate).toFixed(2)} ${chartY(priceForOneYear(rate)).toFixed(2)}`);
+      }
+      priceCurve.setAttribute("d", points.join(" "));
+    }
+
+    function updateCurve() {
+      const rate = Number(marketRate.value);
+      const price = priceForOneYear(rate);
+      const x = chartX(rate);
+      const y = chartY(price);
+      marketRateOutput.textContent = `${rate.toFixed(1)}%`;
+      curvePoint.setAttribute("cx", x.toFixed(2));
+      curvePoint.setAttribute("cy", y.toFixed(2));
+      curvePointLabel.setAttribute("x", x.toFixed(2));
+      curvePointLabel.setAttribute("y", (y - 13).toFixed(2));
+      curvePointLabel.setAttribute("text-anchor", x > 548 ? "end" : x < 115 ? "start" : "middle");
+      curvePointLabel.textContent = formatMoney(price);
+
+      let reason;
+      if (rate > 3) {
+        reason = "새 채권보다 적은 이자를 주는 만큼 오늘 가격이 액면가 아래로 내려갑니다.";
+      } else if (rate < 3) {
+        reason = "기존 채권이 새 채권보다 많은 이자를 주므로 오늘 가격이 액면가 위로 올라갑니다.";
+      } else {
+        reason = "기존 채권의 3% 쿠폰과 시장금리가 같아 가격도 액면가와 같습니다.";
+      }
+      curveFeedback.innerHTML = `<strong>시장금리 ${rate.toFixed(1)}% → 기존 채권 가격 약 ${formatMoney(price)}.</strong> ${reason}`;
+      chartDesc.textContent = `시장금리 ${rate.toFixed(1)}퍼센트일 때 기존 채권의 비교 가격은 약 ${formatMoney(price)}입니다. 금리가 높아질수록 곡선이 내려갑니다.`;
+    }
+
+    marketRate.addEventListener("input", updateCurve);
+    chartWrap.addEventListener("keydown", (event) => {
+      const moves = {
+        ArrowLeft: chartWrap.scrollLeft - 48,
+        ArrowRight: chartWrap.scrollLeft + 48,
+        Home: 0,
+        End: chartWrap.scrollWidth - chartWrap.clientWidth
+      };
+      if (Object.hasOwn(moves, event.key)) {
+        event.preventDefault();
+        chartWrap.scrollLeft = moves[event.key];
+      }
+    });
+
+    const maturityInputs = document.querySelectorAll('input[name="maturity"]');
+    const maturityYearsLabel = document.getElementById("maturity-years-label");
+    const cashflowStrip = document.getElementById("cashflow-strip");
+    const afterPriceLabel = document.getElementById("after-price-label");
+    const afterPriceBar = document.getElementById("after-price-bar");
+    const maturityFeedback = document.getElementById("maturity-feedback");
+
+    function bondPrice(couponRate, requiredRate, years) {
+      const coupon = 100 * couponRate / 100;
+      const discount = 1 + requiredRate / 100;
+      let price = 0;
+      for (let year = 1; year <= years; year += 1) {
+        price += coupon / Math.pow(discount, year);
+      }
+      price += 100 / Math.pow(discount, years);
+      return price;
+    }
+
+    function updateMaturity() {
+      const selected = document.querySelector('input[name="maturity"]:checked');
+      const years = Number(selected.value);
+      const price = bondPrice(3, 5, years);
+      const drop = 100 - price;
+      maturityYearsLabel.textContent = `${years}년`;
+      afterPriceLabel.textContent = formatMoney(price);
+      afterPriceBar.style.width = `${price}%`;
+
+      cashflowStrip.replaceChildren();
+      for (let year = 1; year <= years; year += 1) {
+        const payment = document.createElement("span");
+        payment.className = "cash-payment";
+        payment.textContent = `${year}년 +${year === years ? "103" : "3"}`;
+        cashflowStrip.appendChild(payment);
+      }
+      cashflowStrip.setAttribute("aria-label", `${years}년 동안 매년 3만원, 마지막 해에는 원금 포함 103만원을 받습니다`);
+
+      const waitingPhrase = years === 1
+        ? "낮은 3% 지급을 한 번만 거치므로 가격 조정이 비교적 작습니다."
+        : `낮은 3% 지급이 ${years}번 남아 있어 더 짧은 채권보다 할인이 커집니다.`;
+      maturityFeedback.innerHTML = `<strong>${years}년 남으면 약 ${formatMoney(price)}, ${drop.toFixed(1)}% 하락.</strong> ${waitingPhrase}`;
+    }
+
+    maturityInputs.forEach((input) => input.addEventListener("change", updateMaturity));
+
+    buildCurve();
+    updatePriceTuner();
+    updateCurve();
+    updateMaturity();
+  </script>
+</body>
+</html>

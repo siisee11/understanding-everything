@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Interactive Explainer"
+  short_description: "Research and build interactive learning pages"
+  default_prompt: "Use $create-interactive-explainer to research a topic and build a declaude-style interactive learning page."
