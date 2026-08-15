@@ -33,6 +33,10 @@ it. Re-run the ledger after edits.
   repository-relative paths and lines.
 - For simulations, verify formulas, defaults, boundary cases, and displayed
   numbers independently of the animation code.
+- For stochastic or agent-based models, record the random seed, verify multiple
+  seeds or sensitivity cases, and do not generalize from one run.
+- For playable stages, distinguish behavior demonstrated inside the declared
+  toy model from claims about real people, markets, health, or policy.
 - If credible sources disagree, show the disagreement and its consequence.
 
 Do not use the page's own generated output as evidence that its explanation is

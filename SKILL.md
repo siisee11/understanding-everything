@@ -1,6 +1,6 @@
 ---
 name: create-interactive-explainer
-description: Research, scope, build, and verify a self-contained interactive learning page from an open-ended question, unfamiliar topic, URL, article, paper, document, GitHub repository, or local codebase. Use when the user wants to understand something through a visual walkthrough, simulator, stepper, adjustable model, or interactive explainer instead of ordinary prose. Narrow broad requests with one focused question at a time; use a domain-independent discovery-first plain-language sequence; investigate claims or real code; cite evidence; distinguish simplification from fact; and test the HTML for behavior, responsiveness, and accessibility. Follow the bundled declaude.org/watermarking-inspired editorial UI unless the user requests another visual system. Do not use for short explanations, static marketing sites, monitoring dashboards, or changes to an existing product page unless the user explicitly asks for an explainer artifact.
+description: Research, scope, build, and verify a self-contained interactive learning page from an open-ended question, unfamiliar topic, URL, article, paper, document, GitHub repository, or local codebase. Use when the user wants a visual walkthrough, simulator, playable lesson, adjustable model, or interactive explainer instead of ordinary prose. Narrow broad requests with one focused question at a time; investigate claims or real code; cite evidence; distinguish simplification from fact; choose automatically among editorial-v1, simulation-essay-v1, and playable-post-v1; and test behavior, responsiveness, calculations, and accessibility. Do not use for short prose explanations, static marketing sites, monitoring dashboards, or changes to an existing product page unless the user explicitly requests an explainer artifact.
 ---
 
 # Create Interactive Explainer
@@ -22,107 +22,104 @@ workflow. Do not merely decorate a prose article or summarize a repository.
      hierarchy before drafting.
 3. Ask a scope question only when the request fails the scope test. Ask one
    concise question at a time and offer a recommended option. Do not ask about
-   visual taste, framework choice, filenames, or other decisions that can be
-   made safely from context.
+   visual taste, framework choice, filenames, or safe implementation defaults.
+4. Read [production-profiles.md](references/production-profiles.md) and choose
+   one dominant profile. Honor a profile explicitly requested by the user.
 
 ## Establish the learning contract
 
 Before building, write a private working brief containing:
 
 - Audience and assumed prerequisite knowledge.
-- Words and concepts the learner can already be expected to know.
 - One-sentence learning objective.
-- The spine: the single causal path, mechanism, or mental model the page tracks.
+- The spine: the single causal path, mechanism, decision, or mental model.
 - In-scope concepts and explicit out-of-scope branches.
-- The first concrete situation, observable event, or user action that makes the
-  core question matter before terminology is introduced.
-- One prediction or comparison the learner can make before seeing the answer.
-- The vocabulary budget for each step and the optional advanced branch.
+- A concrete opening situation that matters before terminology appears.
+- One prediction, trace, comparison, or playable goal.
+- Vocabulary budget and optional depth.
 - Evidence sources and freshness requirements.
-- Two to five proposed interactions.
+- Chosen production profile and why it fits.
+- Planned learner actions, visible responses, and intended discoveries.
+- For a model-driven profile: state variables, invariants, assumptions, and
+  deterministic reference cases.
 
-For each proposed interaction, answer all three questions:
+For every interaction answer:
 
 1. What does the learner change or do?
 2. What visibly changes in response?
-3. What relationship or insight should the learner discover?
+3. What relationship or insight becomes observable?
+4. What equivalent text or control supports a learner who cannot use the visual?
 
-Remove any interaction that cannot answer all three. Read
+Remove any interaction that cannot answer all four. Read
 [learning-and-interaction-design.md](references/learning-and-interaction-design.md)
-before storyboarding or implementation.
+and [discovery-first-explanation.md](references/discovery-first-explanation.md)
+before storyboarding.
 
-Read [discovery-first-explanation.md](references/discovery-first-explanation.md)
-before drafting. Use its domain-independent sequence: create a concrete need,
-invite a prediction or trace, reveal an observable consequence, name the concept
-only after the learner has a use for it, and verify transfer with a changed
-case. Keep a short beginner path independently complete; place formalism,
-implementation detail, exceptions, and specialist vocabulary behind optional
-depth unless the inferred audience already knows the prerequisites.
+## Apply the selected profile
 
-Read [declaude-editorial-style.md](references/declaude-editorial-style.md)
-before implementation. Treat it as a required UI contract, not a mood-board:
-use the narrow editorial column, numbered step rhythm, one-idea callouts, bordered
-experiment figures, and restrained control treatment defined there. Depart from
-that system only when the user explicitly asks for another style or when a
-content-specific visualization needs a documented accessibility exception.
+- For `editorial-v1`, read
+  [declaude-editorial-style.md](references/declaude-editorial-style.md) and start
+  from [explainer-template.html](assets/explainer-template.html).
+- For `simulation-essay-v1`, read
+  [simulation-essay-profile.md](references/simulation-essay-profile.md) and
+  [model-and-scene-engineering.md](references/model-and-scene-engineering.md),
+  then start from
+  [simulation-essay-template.html](assets/simulation-essay-template.html).
+- For `playable-post-v1`, read
+  [playable-post-profile.md](references/playable-post-profile.md) and
+  [model-and-scene-engineering.md](references/model-and-scene-engineering.md),
+  then start from [playable-post-template.html](assets/playable-post-template.html).
+
+Treat benchmark pages as evidence of general techniques, not assets or layouts
+to copy. Keep prose, visuals, code, characters, and interaction choreography
+original to the topic.
 
 ## Investigate before explaining
 
-- Read the supplied material or real implementation rather than relying on
-  memory or names.
+- Read supplied material or the real implementation instead of relying on names.
 - Use current web research for time-sensitive, high-stakes, or unfamiliar
   claims. Prefer primary sources and official documentation.
-- Treat provided articles as narrative leads, not automatic ground truth.
-- For code, resolve the branch and commit, trace actual entry points and call
-  paths, and anchor claims to file and line evidence.
-- Keep research read-only unless the user separately requests product or
-  repository changes.
+- Treat supplied articles as narrative leads, not automatic ground truth.
+- For code, resolve branch and commit, trace actual entry points and call paths,
+  and anchor claims to file and line evidence.
+- Keep research read-only unless the user separately requests repository changes.
 
 ## Build the page
 
-1. Design four to seven short sections, each teaching one idea. Follow the
-   discovery-first sequence rather than definition-first exposition. Make the
-   core path understandable without opening advanced details.
-2. Prefer semantic HTML for words, tokens, controls, tables, and discrete
-   states; SVG for inspectable relationships and diagrams; Canvas only for
-   dense or continuous simulations. Never use Canvas merely for appearance.
-3. Copy [explainer-template.html](assets/explainer-template.html) as the
-   starting point. Preserve its `declaude-editorial-v1` marker and design tokens.
-   Replace every placeholder and remove unused example blocks. Do not replace
-   the narrow editorial layout with a wide dashboard, oversized marketing hero,
-   card grid, glassmorphism, or decorative gradient treatment.
+1. Follow the chosen profile's narrative unit: editorial steps, connected
+   simulation scenes, or playable stages. Do not target a scene count for its
+   own sake.
+2. Prefer semantic HTML for text and discrete state; SVG for inspectable
+   relationships; Canvas or WebGL only for dense, spatial, or continuous models.
+3. Keep calculations and state transitions separate from rendering. A complex
+   page may be developed as modules, but bundle the delivered artifact into a
+   self-contained HTML file unless the user requests another packaging format.
 4. Write original prose in the user's language. Use concrete actors, actions,
-   states, and consequences before abstractions. Introduce a domain term only
-   after its meaning is visible, define it in the same sentence, and do not use
-   it as shorthand until the learner has encountered it. Paraphrase source
-   material, quote sparingly, cite near factual claims without interrupting the
-   first explanation, and end with a source list.
-5. Keep inferred audience level, reading time, and generic labels such as
-   `beginner`, `advanced`, or `educational simplification` out of the visible
-   masthead unless the user requests them. Keep those planning assumptions
-   private. State specific model assumptions or simplifications beside the
-   explanation they qualify instead of using a generic page-level badge.
-6. Make the first render useful before interaction. Preserve a readable
+   states, and consequences before abstractions. Introduce a term only after its
+   meaning is visible, cite important claims near their use, and end with sources.
+5. Keep inferred audience, reading time, and generic labels such as `beginner`,
+   `advanced`, or `educational simplification` out of the visible masthead unless
+   requested. Put specific assumptions beside the model they qualify.
+6. Make the first render useful before interaction and preserve a readable
    explanation when JavaScript is unavailable.
-7. Use a user-specified output location when given. Otherwise write to a
-   durable, task-owned artifact directory outside a checked-out repository when
-   available. If that is impossible, use an artifacts/interactive-explainers
-   directory without modifying product source folders. Never overwrite an
+7. Use a user-specified output location. Otherwise use a durable task-owned
+   artifact directory outside product source when available. Never overwrite an
    existing explainer without approval.
 
 ## Verify and deliver
 
 1. Read [fact-checking.md](references/fact-checking.md) and resolve every
    unsupported or contradicted claim.
-2. Run scripts/validate-explainer.mjs against the final HTML and fix every
-   error. Treat warnings as review items, not automatic failures.
+2. Run `scripts/validate-explainer.mjs` against the final HTML. It detects the
+   `explainer-profile` marker and applies common plus profile-specific checks.
 3. Read [browser-and-accessibility-qa.md](references/browser-and-accessibility-qa.md).
-   When browser tooling is available, serve the page locally and exercise every
-   interaction at desktop and narrow mobile widths, using keyboard input as
-   well as pointer input. Fix console errors, overflow, stale states, and
-   inaccessible controls.
-4. Do not claim browser, accessibility, or visual verification that was not
-   actually performed. State the precise limitation when a check is unavailable.
-5. Deliver the absolute page path, the one-sentence learning objective, the
-   principal sources or code revision, and any material limitations. Do not
-   publish or deploy unless the user requests it.
+   Exercise every interaction at desktop and narrow mobile widths with pointer
+   and keyboard input. Fix console errors, overflow, stale states, inaccessible
+   controls, and broken representative or extreme states.
+4. For simulations and playable models, independently verify formulas,
+   invariants, seeded scenarios, and displayed reference values outside the
+   rendering path.
+5. Do not claim verification that was not performed. State exact limitations.
+6. Deliver the absolute page path, selected profile, learning objective,
+   principal sources or code revision, verification performed, and material
+   limitations. Do not publish or deploy unless the user requests it.
