@@ -1,4 +1,4 @@
 interface:
-  display_name: "Create Interactive Explainer"
+  display_name: "Understanding Everything"
   short_description: "Build researched interactive explainers in three modes"
-  default_prompt: "Use $create-interactive-explainer to research this topic, choose the best production profile, and build a verified interactive learning page."
+  default_prompt: "Use $understanding-everything to research this topic, choose the best production profile, and build a verified interactive learning page."
