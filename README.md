@@ -1,6 +1,6 @@
 # Understanding Everything
 
-[![skills.sh](https://skills.sh/b/siisee11/understanding-everything)](https://skills.sh/siisee11/understanding-everything)
+[![skills.sh](https://skills.sh/b/siisee11/understanding-everything)](https://skills.sh/siisee11/understanding-everything/understanding-everything)
 
 A reusable Codex skill that turns an unfamiliar topic, source article, paper,
 GitHub repository, or local codebase into a researched interactive explainer.
