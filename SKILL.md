@@ -1,9 +1,9 @@
 ---
-name: create-interactive-explainer
+name: understanding-everything
 description: Research, scope, build, and verify a self-contained interactive learning page from an open-ended question, unfamiliar topic, URL, article, paper, document, GitHub repository, or local codebase. Use when the user wants a visual walkthrough, simulator, playable lesson, adjustable model, or interactive explainer instead of ordinary prose. Narrow broad requests with one focused question at a time; investigate claims or real code; cite evidence; distinguish simplification from fact; choose automatically among editorial-v1, simulation-essay-v1, and playable-post-v1; and test behavior, responsiveness, calculations, and accessibility. Do not use for short prose explanations, static marketing sites, monitoring dashboards, or changes to an existing product page unless the user explicitly requests an explainer artifact.
 ---
 
-# Create Interactive Explainer
+# Understanding Everything
 
 Turn curiosity into a small learning environment. Treat research, editorial
 selection, interaction design, implementation, and verification as one

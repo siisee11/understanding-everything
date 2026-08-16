@@ -1,5 +1,7 @@
 # Understanding Everything
 
+[![skills.sh](https://skills.sh/b/siisee11/understanding-everything)](https://skills.sh/siisee11/understanding-everything)
+
 A reusable Codex skill that turns an unfamiliar topic, source article, paper,
 GitHub repository, or local codebase into a researched interactive explainer.
 
@@ -38,11 +40,23 @@ self-contained delivery.
 
 ## Install
 
-Place this repository's skill files in a directory discovered by Codex, for
-example:
+Install it from [skills.sh](https://skills.sh/) with the open Agent Skills CLI:
+
+```bash
+npx skills add siisee11/understanding-everything
+```
+
+For a non-interactive global Codex installation:
+
+```bash
+npx skills add siisee11/understanding-everything --skill understanding-everything --agent codex --global --yes
+```
+
+To install manually instead, place this repository's skill files in a directory
+discovered by Codex, for example:
 
 ```text
-~/.codex/skills/create-interactive-explainer/
+~/.codex/skills/understanding-everything/
 ├── SKILL.md
 ├── agents/
 ├── assets/
@@ -55,15 +69,15 @@ example:
 Invoke the skill explicitly:
 
 ```text
-$create-interactive-explainer 금리와 기존 채권 가격이 왜 반대로 움직이는지 알고 싶어.
+$understanding-everything 금리와 기존 채권 가격이 왜 반대로 움직이는지 알고 싶어.
 ```
 
 It also accepts source-driven and repository-driven requests:
 
 ```text
-$create-interactive-explainer 이 글의 핵심 메커니즘을 조사해서 인터랙티브하게 설명해줘: <URL>
+$understanding-everything 이 글의 핵심 메커니즘을 조사해서 인터랙티브하게 설명해줘: <URL>
 
-$create-interactive-explainer 이 GitHub 저장소에서 채팅 기능이 어떻게 동작하는지 조사해서 설명해줘: <REPOSITORY_URL>
+$understanding-everything 이 GitHub 저장소에서 채팅 기능이 어떻게 동작하는지 조사해서 설명해줘: <REPOSITORY_URL>
 ```
 
 ## Examples
